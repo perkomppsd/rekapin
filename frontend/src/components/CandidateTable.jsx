@@ -24,6 +24,13 @@ import { displayAge, formatDate } from "@/lib/dates";
 
 const RATING_FIELDS = ["nilai_wajah", "nilai_komunikasi", "nilai_kedisiplinan"];
 
+// Klik baris = buka form edit. Tapi jangan mengganggu saat user sedang
+// menyorot teks (mis. menyalin NIK atau no HP) — itu kebutuhan sehari-hari.
+function adaTeksTersorot() {
+  const sel = typeof window !== "undefined" ? window.getSelection() : null;
+  return Boolean(sel && !sel.isCollapsed && sel.toString().trim());
+}
+
 // NIK sementara (kandidat yang KTP-nya belum dikumpulkan) ditampilkan samar
 // dan diberi label, supaya kelihatan mana yang masih perlu ditindaklanjuti.
 function NikCell({ value, tempPrefix }) {
@@ -217,15 +224,32 @@ export default function CandidateTable({
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={row.id} data-testid={`row-candidate-${row.id}`}
-                className="border-slate-800/70 hover:bg-slate-800/40 data-row">
+              <TableRow
+                key={row.id}
+                data-testid={`row-candidate-${row.id}`}
+                role="button"
+                tabIndex={0}
+                title="Klik untuk edit kandidat"
+                onClick={() => { if (!adaTeksTersorot()) onEdit(row); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onEdit(row);
+                  }
+                }}
+                className="border-slate-800/70 hover:bg-slate-800/40 data-row cursor-pointer
+                  focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/60">
                 {columns.map((c) => (
                   <TableCell key={c.key}>
                     <Cell column={c} row={row} field={meta.fieldByKey?.[c.key]}
                       tempPrefix={meta.nik_temp_prefix} />
                   </TableCell>
                 ))}
-                <TableCell className="text-right">
+                {/* Menu aksi punya aksinya sendiri, jadi klik di sel ini tidak
+                    boleh ikut membuka form edit. */}
+                <TableCell className="text-right"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}>
                   <RowActions row={row} onEdit={onEdit} onDelete={onDelete}
                     onBlacklist={onBlacklist} onShowHistory={onShowHistory}
                     onSendEmail={onSendEmail} />
