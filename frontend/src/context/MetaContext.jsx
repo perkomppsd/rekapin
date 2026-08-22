@@ -52,6 +52,22 @@ export function MetaProvider({ children }) {
     if (user) load();
   }, [user, load]);
 
+  // Skema bisa berubah di server (mis. ada kolom/tab baru) sementara tab browser
+  // tetap terbuka. Segarkan begitu tab kembali aktif, supaya tidak perlu
+  // reload manual setiap kali backend/app/schema.py diubah.
+  useEffect(() => {
+    if (!user) return undefined;
+    const refresh = () => {
+      if (!document.hidden) load();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [user, load]);
+
   const value = useMemo(() => {
     const fieldByKey = Object.fromEntries(meta.fields.map((f) => [f.key, f]));
     const systemByKey = Object.fromEntries((meta.system_fields || []).map((f) => [f.key, f]));
