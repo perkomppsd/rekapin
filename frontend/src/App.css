@@ -1,0 +1,29 @@
+.App {
+  min-height: 100vh;
+}
+
+.glass-nav {
+  background-color: rgb(2 6 23 / 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgb(30 41 59);
+}
+
+.stat-card {
+  transition: transform 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgb(79 70 229 / 0.4);
+}
+
+.data-row {
+  transition: background-color 150ms ease-in-out;
+}
+
+.pill-btn {
+  transition: background-color 200ms ease-in-out, transform 200ms ease-in-out, color 200ms ease-in-out;
+}
+.pill-btn:hover {
+  transform: translateY(-1px);
+}

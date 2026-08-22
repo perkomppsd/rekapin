@@ -1,0 +1,94 @@
+{
+  "theme_strategy": "dark_mode_first",
+  "archetype": "THE PERFORMANCE PRO adapted for Corporate HR",
+  "typography": {
+    "headings": {
+      "family": "Manrope",
+      "fallbacks": ["ui-sans-serif", "system-ui", "sans-serif"],
+      "usage": "Use for all H1, H2, H3, H4. Apply tracking-tight for H1/H2. Avoid Inter.",
+      "weights": ["font-semibold", "font-bold", "font-black"]
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "fallbacks": ["ui-sans-serif", "system-ui", "sans-serif"],
+      "usage": "Use for dense data tables, forms, and general paragraphs.",
+      "weights": ["font-normal", "font-medium"]
+    },
+    "labels": {
+      "usage": "Uppercase, tiny, wide spacing (tracking-[0.2em]) for table headers, small badges, and overlines."
+    }
+  },
+  "colors": {
+    "background": {
+      "page": "bg-slate-950",
+      "surface": "bg-slate-900",
+      "surface_hover": "hover:bg-slate-800"
+    },
+    "text": {
+      "primary": "text-slate-50",
+      "secondary": "text-slate-400",
+      "muted": "text-slate-500"
+    },
+    "border": {
+      "default": "border-slate-800",
+      "focus": "focus:border-indigo-500",
+      "table": "border-slate-800/50"
+    },
+    "accent": {
+      "primary": "bg-indigo-600",
+      "primary_hover": "hover:bg-indigo-500",
+      "primary_text": "text-white",
+      "success": "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+      "warning": "text-amber-400 bg-amber-400/10 border-amber-400/20",
+      "danger": "text-rose-400 bg-rose-400/10 border-rose-400/20"
+    },
+    "forbidden": ["#1B93A4", "pure black #000000", "pure white #FFFFFF for backgrounds", "#7351B7"]
+  },
+  "visual_enhancers": {
+    "surfaces": "Neumorphism with crisp inner contrasts. Flat backgrounds with 1px subtle borders (border-slate-800). No heavy shadows in dark mode. Max 8px border-radius.",
+    "glassmorphism": "Used only for sticky headers, modals, or floating panels. bg-slate-950/60 with backdrop-blur-xl and border border-slate-800. NEVER fully transparent.",
+    "effects": "Subtle noise texture overlay for the main background to prevent digital flatness."
+  },
+  "components": {
+    "tables": "High density, compact rows. Use Shadcn Table. Left-align text, right-align numbers. Sticky headers. Scannable grid borders for data-heavy sections.",
+    "forms": "Shadcn Form, Input, Select, Checkbox. Use Shadcn DatePicker (Calendar + Popover) for interview dates. Never use native <input type='date'> or <select>.",
+    "modals": "Shadcn Dialog for Candidate CRUD operations. Must use backdrop-blur on the overlay.",
+    "buttons": "Pill-shaped or rounded-md. High contrast on active state. Must have hover transitions (-translate-y-[1px]).",
+    "tabs": "Shadcn Tabs for switching between Master Data, Interview, Training, Blacklist, Placement. Override fixed height to h-auto. Subdued inactive tabs, bright active tab."
+  },
+  "grids_and_layouts": {
+    "dashboard_stats": "MODE B: High Density Grid. grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4.",
+    "main_container": "Generous outer padding (p-4 md:p-8), full width or max-w-[1600px] mx-auto.",
+    "sidebar_or_nav": "Vertical sidebar or sticky top nav with crystal glass effect.",
+    "general": "Do not center align the app container. Left-align dense content and forms."
+  },
+  "motion": {
+    "interactions": "Hover states must slightly lighten the background and shift text color. -translate-y-[2px] on stat cards.",
+    "transitions": "transition-colors duration-200 ease-in-out for buttons/links. Never use 'transition-all'."
+  },
+  "accessibility": {
+    "contrast": "Ensure text contrast meets APCA/WCAG AA standards. Interactive elements must have focus rings (focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950).",
+    "testing": "All interactive and key informational elements MUST include a `data-testid` attribute (e.g., `data-testid=\"login-submit-button\"`, `data-testid=\"add-candidate-button\"`)."
+  },
+  "media": {
+    "icons": "Phosphor Icons (@phosphor-icons/react) for dense dashboard layouts. Sharp and readable at small sizes."
+  },
+  "image_urls": [
+    {
+      "url": "https://images.unsplash.com/photo-1515703944563-dbcfbf121b3d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBidWlsZGluZyUyMGFyY2hpdGVjdHVyZSUyMGRhcmt8ZW58MHx8fHwxNzg2ODg1MzM3fDA&ixlib=rb-4.1.0&q=85",
+      "category": "login_background",
+      "description": "Modern dark office building with glass panel. Use this for the split-screen image in the Login page to establish a corporate, professional mood. Apply a dark overlay (bg-slate-950/40) so it doesn't distract."
+    }
+  ],
+  "instructions_to_main_agent": [
+    "Build the dashboard exclusively in dark mode using Tailwind CSS.",
+    "Implement the authentication flow (login screen).",
+    "For the 'Master Data' and other filtered tabs, use a robust data table with search and filtering capabilities.",
+    "Ensure CRUD operations exist for candidate data in Master Data.",
+    "Use Shadcn UI for complex components (Dialog, Table, Select, Calendar, Tabs, DropdownMenu).",
+    "Add 'data-testid' to all form inputs, buttons, and table rows for testing.",
+    "Apply 'Manrope' for headings and 'IBM Plex Sans' for body text. Do NOT use Inter for headings.",
+    "Translate HR terms to Indonesian exactly as requested in the problem statement (e.g., NAMA, ALAMAT, STATUS INTERVIEW, TANGGAL DAN JAM INTERVIEW)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": "You tend to converge toward generic outputs. Avoid this. Create depth through layered design elements with z-index hierarchy. Use glass-morphism effects with backdrop filters for floating elements. NEVER apply universal transition (transition: all). Always use modern button styles. DO NOT center align the app container. Every interaction needs micro-animations. Use sonner for toasts. Check accessibility contrast. NEVER use placeholder image URLs. Add `data-testid` to everything interactive."
+}

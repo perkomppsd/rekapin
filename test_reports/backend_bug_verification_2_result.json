@@ -1,0 +1,116 @@
+{
+  "api": "https://recruit-master-12.preview.emergentagent.com/api",
+  "run_id": "1786887796",
+  "checks": [
+    {
+      "message": "admin login returns 200",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhOWFjMjliMC1jNTg5LTRmOWQtOWZlZC1lYWU4NjQ2NmVlNzciLCJlbWFpbCI6IndhcmRhaC5uYWJpbGFoOTdAZ21haWwuY29tIiwiZXhwIjoxNzg2OTMwOTk3LCJ0eXBlIjoiYWNjZXNzIn0.kxFLP6Jr17RCdL02a58v_3RM2FPktvmY7S-CtW7098s\",\"token_type\":\"bearer\",\"user\":{\"id\":\"a9ac29b0-"
+      }
+    },
+    {
+      "message": "POST /candidates accepts email/date/blacklist reason",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "body": "{\"nama\":\"API Date Email Blacklist 1786887796\",\"email\":\"api.date.1786887796@example.com\",\"alamat\":\"Jl API\",\"no_hp\":\"0886887796\",\"usia\":29,\"apply\":\"Kasir API\",\"rencana_penempatan\":\"Jakarta API\",\"posisi_penempatan\":\"\",\"penempatan_fix\":\"\",\"posisi_fix\":\"\",\"status_interview\":\"Terjadwal\",\"tanggal_interview\":\"2026-03-15\",\"jam_interview\":\"09:30\",\"metode_interview\":\"Online\",\"status_training\":\"Belum Training\",\"status_blacklist\":\"Ya - Tidak Hadir\",\"alasan_blacklist\":\"API reason: tidak hadir interview\",\"kete"
+      }
+    },
+    {
+      "message": "created candidate response includes saved email",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "created candidate response includes saved tanggal_interview",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "created candidate response includes saved alasan_blacklist",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "GET /candidates returns 200 after create",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "created candidate persists in list",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "persisted list has email/date/blacklist reason",
+      "passed": true,
+      "details": {
+        "nama": "API Date Email Blacklist 1786887796",
+        "email": "api.date.1786887796@example.com",
+        "alamat": "Jl API",
+        "no_hp": "0886887796",
+        "usia": 29,
+        "apply": "Kasir API",
+        "rencana_penempatan": "Jakarta API",
+        "posisi_penempatan": "",
+        "penempatan_fix": "",
+        "posisi_fix": "",
+        "status_interview": "Terjadwal",
+        "tanggal_interview": "2026-03-15",
+        "jam_interview": "09:30",
+        "metode_interview": "Online",
+        "status_training": "Belum Training",
+        "status_blacklist": "Ya - Tidak Hadir",
+        "alasan_blacklist": "API reason: tidak hadir interview",
+        "keterangan": "backend verification candidate",
+        "pic": "QA-API",
+        "id": "70c9b448-a020-47c8-92a2-ccaec1e8aad3",
+        "created_at": "2026-08-16T13:43:17.322650+00:00",
+        "updated_at": "2026-08-16T13:43:17.322650+00:00"
+      }
+    },
+    {
+      "message": "POST /candidates/bulk returns 200 for two candidates",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "body": "{\"inserted\":2}"
+      }
+    },
+    {
+      "message": "bulk endpoint reports inserted=2",
+      "passed": true,
+      "details": {
+        "inserted": 2
+      }
+    },
+    {
+      "message": "bulk-created candidate appears in list: API Bulk Andi 1786887796",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "bulk-created candidate email saved: API Bulk Andi 1786887796",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "bulk-created candidate appears in list: API Bulk Budi 1786887796",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "message": "bulk-created candidate email saved: API Bulk Budi 1786887796",
+      "passed": true,
+      "details": {}
+    }
+  ],
+  "created_ids": [
+    "70c9b448-a020-47c8-92a2-ccaec1e8aad3",
+    "5d27be5a-50ea-44fb-875b-a3b19d63e3f1",
+    "0bc6e065-75da-43b5-8c33-59f896b09843"
+  ],
+  "status": "passed"
+}

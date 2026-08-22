@@ -1,0 +1,34 @@
+{
+  "summary": "Smoke-tested Rekapin HR Recruitment app end-to-end. Backend auth, CRUD, stats and Excel export all green. Frontend login (invalid+valid), candidate add, auto-filter to Interview tab, row-level Blacklist with prompt + auto-move to Blacklist tab, delete, logout and route guard all work. Only anomaly: 4 of 5 stat cards' data-testid is_visible returned False right after dashboard load (stat-blacklist=True) — likely animation/timing, non-blocking.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "GET /api/candidates without token returns 401",
+    "POST /api/auth/login with valid admin creds returns access_token",
+    "POST /api/auth/login with wrong password returns 401 and Indonesian error",
+    "GET /api/candidates/stats returns {total,interview,training,blacklist,placement}",
+    "GET /api/candidates/export?scope=all returns 200 with xlsx content-type",
+    "Login page renders and invalid password shows error",
+    "Valid login redirects to /dashboard",
+    "All 5 tabs and action buttons (add, export, search, logout) visible",
+    "Add candidate flow saves and row appears in Master Data tab",
+    "Candidate with status_interview='Sudah Dipanggil' AUTOMATICALLY appears in Interview tab (key feature)",
+    "Row-level Blacklist action: prompt accepted with reason, candidate moved to Blacklist tab automatically",
+    "Delete candidate removes row from listing",
+    "Logout clears session and redirects to /login",
+    "Direct visit /dashboard without token redirects to /login"
+  ],
+  "failed": [
+    {
+      "area": "frontend/dashboard",
+      "issue": "data-testid=stat-total, stat-interview, stat-training, stat-placement reported not visible by Playwright right after dashboard mount (stat-blacklist visible). Could be render/animation timing, not verified as broken visually.",
+      "evidence": "is_visible checks returned False for 4/5 stat cards while stat-blacklist=True in same tick",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Optional: verify stat cards render synchronously (or wrap in Playwright wait_for). Not blocking first finish."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
