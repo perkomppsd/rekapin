@@ -108,7 +108,8 @@ class Blacklist:
 STATUS_SETS: Dict[str, List[str]] = {
     "interview": [Interview.NOT_CALLED, Interview.CALLED, Interview.SCHEDULED,
                   Interview.DONE, Interview.PASSED, Interview.FAILED],
-    "metode": ["Online", "Offline", "Telepon"],
+    # Offline didahulukan karena paling sering dipakai.
+    "metode": ["Offline", "Online", "Telepon"],
     "ttd": [Ttd.PENDING, Ttd.SIGNED, Ttd.RESIGNED_AFTER],
     "kontrak": [Kontrak.PENDING, Kontrak.SIGNED, Kontrak.EXTENDED,
                 Kontrak.NOT_CONTINUED, Kontrak.RESIGNED_AFTER],
