@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { FORM, T } from "@/config/theme";
-import { FIELD_ACTIONS, testIdFor } from "@/config/formFields";
+import { DYNAMIC_HINTS, FIELD_ACTIONS, testIdFor } from "@/config/formFields";
 
 const NONE = "__none__";
 
@@ -103,6 +103,7 @@ export default function FieldInput({ field, label, value, onChange, testid }) {
   const id = testid || testIdFor(field);
   const action = FIELD_ACTIONS[field.key];
   const showAction = action && !action.hideIf?.(value);
+  const dynamicHint = DYNAMIC_HINTS[field.key]?.(value);
   return (
     <div className={`space-y-1.5 ${field.span === 2 ? "md:col-span-2" : ""}`}>
       <Label className={T.label}>
@@ -117,7 +118,9 @@ export default function FieldInput({ field, label, value, onChange, testid }) {
           <FieldAction action={action} fieldKey={field.key} onChange={onChange} />
         )}
       </div>
-      {field.hint ? <p className={T.hint}>{field.hint}</p> : null}
+      {dynamicHint
+        ? <p className="text-indigo-300 text-xs" data-testid={`hint-${field.key}`}>{dynamicHint}</p>
+        : field.hint ? <p className={T.hint}>{field.hint}</p> : null}
     </div>
   );
 }

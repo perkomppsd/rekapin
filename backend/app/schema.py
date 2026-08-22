@@ -143,8 +143,12 @@ FIELDS: Tuple[FieldSpec, ...] = (
               aliases=("address",), paste_index=6),
     FieldSpec("no_hp", "No HP", group="pribadi", searchable=True,
               aliases=("no hp", "no. hp", "phone", "telepon"), paste_index=2),
-    FieldSpec("usia", "Usia", type="number", group="pribadi", default=None,
-              aliases=("umur", "age"), paste_index=3),
+    # Tanggal lahir menggantikan kolom "usia": umur dihitung otomatis supaya
+    # tidak pernah basi. Bisa terisi sendiri dari NIK (digit 7-12 = DDMMYY).
+    FieldSpec("tanggal_lahir", "Tanggal Lahir", type="date", group="pribadi",
+              hint="Umur dihitung otomatis. Terisi sendiri dari NIK kalau kosong",
+              aliases=("tgl lahir", "birth date", "dob", "tanggal_lahir"),
+              paste_index=3),
     FieldSpec("apply", "Apply", group="pribadi", searchable=True,
               placeholder="Posisi yang dilamar",
               aliases=("posisi apply", "posisi"), paste_index=4),

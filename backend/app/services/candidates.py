@@ -1,13 +1,16 @@
 """Operasi dasar dokumen kandidat (dipakai endpoint create/bulk/upload)."""
 
 import uuid
+from datetime import date
 from typing import List, Optional, Tuple
+
+from fastapi import HTTPException
 
 from ..db import db
 from ..models import CandidateCreate
 from ..schema import FIELD_BY_KEY
 from . import nik as nik_service
-from .common import now_iso
+from .common import now_iso, parse_date
 from .rules import apply_auto_rules
 
 
@@ -21,6 +24,31 @@ def prepare_new(data: dict, user: dict, when: Optional[str] = None) -> dict:
     doc["created_by"] = user["id"]
     doc["created_by_email"] = user["email"]
     return doc
+
+
+MIN_AGE, MAX_AGE = 15, 70
+
+
+def assert_valid_birthdate(value) -> str:
+    """Tolak tanggal lahir yang jelas salah ketik (masa depan / umur tak wajar)."""
+    tanggal = str(value or "").strip()
+    if not tanggal:
+        return ""
+    born = parse_date(tanggal)
+    if born is None:
+        raise HTTPException(status_code=400,
+                            detail="Tanggal lahir tidak valid (format: YYYY-MM-DD)")
+    today = date.today()
+    umur = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+    if umur < 0:
+        raise HTTPException(status_code=400,
+                            detail="Tanggal lahir tidak boleh di masa depan")
+    if umur > MAX_AGE + 30:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tanggal lahir tidak wajar (umur jadi {umur} tahun) — cek kembali",
+        )
+    return tanggal
 
 
 def coerce_value(key: str, raw) -> Optional[object]:

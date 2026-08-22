@@ -6,6 +6,8 @@
 //   VISIBLE_WHEN      field yang hanya muncul pada kondisi tertentu
 //   FIELD_WARNINGS    peringatan yang muncul di bawah field
 
+import { ageFrom } from "@/lib/dates";
+
 // Default data-testid: `${prefix}-${key berganti - }` dengan prefix
 // select / rating / input sesuai tipe field. Kecuali yang terdaftar di sini.
 export const TESTID_OVERRIDES = {
@@ -55,6 +57,14 @@ export const FIELD_ACTIONS = {
     fetch: "/candidates/nik-sementara",
     pick: (data) => data.nik,
     hideIf: (value) => Boolean(value),
+  },
+};
+
+// Keterangan yang ikut berubah sesuai isi form (muncul di bawah input).
+export const DYNAMIC_HINTS = {
+  tanggal_lahir: (value) => {
+    const umur = ageFrom(value);
+    return umur === null ? null : `Umur sekarang: ${umur} tahun`;
   },
 };
 

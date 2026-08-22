@@ -18,6 +18,7 @@ import { useMeta } from "@/context/MetaContext";
 import { columnsFor } from "@/config/tableViews";
 import { toneForStatus } from "@/config/statusTones";
 import { T, tone } from "@/config/theme";
+import { displayAge, formatDate } from "@/lib/dates";
 
 const RATING_FIELDS = ["nilai_wajah", "nilai_komunikasi", "nilai_kedisiplinan"];
 
@@ -45,17 +46,6 @@ function StatusPill({ fieldKey, value }) {
   );
 }
 
-function fmtDate(iso) {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
 const ratingAverage = (row) => {
   const values = RATING_FIELDS.map((k) => row[k]).filter((n) => n);
   return values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : "—";
@@ -72,7 +62,7 @@ const VARIANTS = {
       {v || "—"}
     </span>
   ),
-  date: (v) => <span className="text-slate-400 text-xs">{fmtDate(v)}</span>,
+  date: (v) => <span className="text-slate-400 text-xs">{formatDate(v)}</span>,
 };
 
 // Kolom khusus yang bukan field kandidat.
@@ -87,6 +77,19 @@ const SPECIAL_CELLS = {
       ))}
     </div>
   ),
+  __usia: (row) => {
+    const umur = displayAge(row);
+    if (!umur) return <span className="text-slate-500">—</span>;
+    return (
+      <span className="text-slate-300 tabular-nums"
+        title={umur.perkiraan
+          ? "Usia lama yang tersimpan — isi tanggal lahir agar terhitung otomatis"
+          : `Dihitung dari tanggal lahir ${row.tanggal_lahir}`}>
+        {umur.value}
+        {umur.perkiraan ? <span className="text-slate-500 text-xs ml-1">(lama)</span> : null}
+      </span>
+    );
+  },
   __blacklist_info: (row) => (
     <div className="max-w-[320px]">
       <StatusPill fieldKey="status_blacklist" value={row.status_blacklist} />

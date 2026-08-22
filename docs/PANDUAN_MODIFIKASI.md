@@ -167,6 +167,17 @@ Data lama yang NIK-nya kosong bisa diisi sekali jalan:
 `cd backend && .venv/bin/python scripts/isi_nik_sementara.py` Kalau menambah field unik lain yang butuh format
 khusus, tiru pola file itu.
 
+### Kolom hasil hitungan (tidak disimpan)
+
+Umur adalah contohnya: yang disimpan hanya `tanggal_lahir`, umurnya dihitung
+setiap kali ditampilkan supaya tidak pernah basi.
+
+- Export: tambah entri di `COMPUTED_COLUMNS` (`app/services/excel.py`)
+- Tabel: tambah entri di `SPECIAL_CELLS` (`frontend/src/components/CandidateTable.jsx`)
+  dan pakai key berawalan `__` di `config/tableViews.js`
+- Form: keterangan yang ikut berubah diatur di `DYNAMIC_HINTS`
+  (`frontend/src/config/formFields.js`)
+
 `searchable=True` membuat field ikut dicari kotak pencarian dashboard.
 `sensitive=True` menandai data pribadi — jangan masukkan field ini ke template
 email.

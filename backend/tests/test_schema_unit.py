@@ -193,25 +193,23 @@ def _workbook(rows):
 
 def test_import_dengan_header():
     content = _workbook([
-        ["Nama", "Email", "No. HP", "Umur"],
-        ["Budi", "b@x.com", "0812", 30],
+        ["Nama", "Email", "No. HP", "Tanggal Lahir"],
+        ["Budi", "b@x.com", "0812", "1999-03-15"],
         [None, None, None, None],
     ])
     rows = excel.parse_workbook(content)
     assert len(rows) == 1
-    assert rows[0]["nama"] == "Budi" and rows[0]["usia"] == 30
+    assert rows[0]["nama"] == "Budi" and rows[0]["tanggal_lahir"] == "1999-03-15"
 
 
 def test_import_tanpa_header_mengikuti_urutan_schema():
-    content = _workbook([["Ani", "a@x.com", "0899", 25, "Admin", "Cabang A",
-                          "Jl. Mawar", "Wardah", "w@x.com", "catatan"]])
+    nilai = ["Ani", "a@x.com", "0899", "1999-03-15", "Admin", "Cabang A",
+             "Jl. Mawar", "Wardah", "w@x.com", "catatan"]
+    content = _workbook([nilai])
     rows = excel.parse_workbook(content)
     assert len(rows) == 1
-    row = rows[0]
-    for key, value in zip(schema.IMPORT_POSITIONAL,
-                          ["Ani", "a@x.com", "0899", 25, "Admin", "Cabang A",
-                           "Jl. Mawar", "Wardah", "w@x.com", "catatan"]):
-        assert row[key] == value
+    for key, value in zip(schema.IMPORT_POSITIONAL, nilai):
+        assert rows[0][key] == value
 
 
 def test_import_membuang_baris_tanpa_nama():
@@ -220,9 +218,12 @@ def test_import_membuang_baris_tanpa_nama():
 
 
 def test_export_header_sesuai_schema():
+    from app.services.excel import COMPUTED_COLUMNS
     stream, filename = excel.build_export_workbook([{"nama": "Budi"}], "all")
     ws = load_workbook(stream).active
-    assert [c.value for c in ws[1]] == [label for _, label in schema.EXPORT_COLUMNS]
+    diharapkan = ([label for _, label in schema.EXPORT_COLUMNS]
+                  + [label for _k, label, _f in COMPUTED_COLUMNS])
+    assert [c.value for c in ws[1]] == diharapkan
     assert filename.startswith("recruitment_all_") and filename.endswith(".xlsx")
 
 
@@ -313,13 +314,14 @@ def test_alias_header_ktp_dikenali_saat_import():
         assert schema.IMPORT_HEADER_MAP[header] == "nik"
 
 
-def test_nik_jadi_kolom_paste_terakhir_agar_sheet_lama_tidak_bergeser():
-    # Urutan 10 kolom pertama harus tetap sama seperti sebelum NIK ditambahkan.
-    assert schema.IMPORT_POSITIONAL[:10] == [
-        "nama", "email", "no_hp", "usia", "apply",
-        "rencana_penempatan", "alamat", "pic", "pic_email", "keterangan",
+def test_urutan_kolom_paste_stabil():
+    """Urutan kolom paste tidak boleh bergeser tanpa sengaja — sheet yang sudah
+    dipakai tim akan salah baca. NIK sengaja ditaruh paling akhir; kolom usia
+    diganti tanggal lahir di posisi yang sama (slot ke-4)."""
+    assert schema.IMPORT_POSITIONAL == [
+        "nama", "email", "no_hp", "tanggal_lahir", "apply",
+        "rencana_penempatan", "alamat", "pic", "pic_email", "keterangan", "nik",
     ]
-    assert schema.IMPORT_POSITIONAL[10] == "nik"
 
 
 def test_import_excel_mengenali_kolom_no_ktp():
@@ -543,3 +545,85 @@ def test_aturan_reminder_mencakup_training_dan_kontrak():
     # tanggal_habis_kontrak sudah berupa tenggat, jadi tidak ditambah periode lagi
     assert kontrak.period_days == 0
     assert kontrak.date_field == "tanggal_habis_kontrak"
+
+
+# ---------------------------------------------------------------------------
+# Tanggal lahir menggantikan usia
+# ---------------------------------------------------------------------------
+from datetime import date as _date  # noqa: E402
+
+from app.services.common import age_from, birthdate_from_nik  # noqa: E402
+
+HARI_INI = _date(2026, 8, 22)
+
+
+def test_kolom_usia_diganti_tanggal_lahir():
+    assert "usia" not in schema.FIELD_BY_KEY
+    assert schema.FIELD_BY_KEY["tanggal_lahir"].type == "date"
+    # Slot posisi import dipakai ulang supaya sheet paste tidak bergeser.
+    assert schema.IMPORT_POSITIONAL[3] == "tanggal_lahir"
+
+
+def test_alias_import_tanggal_lahir():
+    for header in ("tanggal lahir", "tgl lahir", "dob", "birth date"):
+        assert schema.IMPORT_HEADER_MAP[header] == "tanggal_lahir"
+
+
+@pytest.mark.parametrize("lahir,umur", [
+    ("1999-03-15", 27),
+    ("2001-08-22", 25),   # tepat ulang tahun hari ini
+    ("2001-08-23", 24),   # besok ulang tahun -> belum genap
+])
+def test_hitung_umur(lahir, umur):
+    assert age_from(lahir, HARI_INI) == umur
+
+
+@pytest.mark.parametrize("bad", ["", None, "bukan tanggal", "2026-13-45"])
+def test_umur_dari_tanggal_invalid(bad):
+    assert age_from(bad, HARI_INI) is None
+
+
+@pytest.mark.parametrize("nik,lahir", [
+    ("3201011503990001", "1999-03-15"),   # laki-laki
+    ("3275025507960002", "1996-07-15"),   # perempuan: DD 55 = 15 + 40
+    ("3674030102010005", "2001-02-01"),
+])
+def test_tanggal_lahir_dari_nik(nik, lahir):
+    assert birthdate_from_nik(nik, HARI_INI) == lahir
+
+
+@pytest.mark.parametrize("nik,alasan", [
+    ("9999393582027078", "NIK sementara tidak boleh jadi tanggal"),
+    ("3201013209990001", "tanggal 32 tidak ada"),
+    ("3201011513990001", "bulan 13 tidak ada"),
+    ("32010115039900", "panjang NIK salah"),
+    ("", "kosong"),
+])
+def test_nik_yang_tidak_menghasilkan_tanggal(nik, alasan):
+    assert birthdate_from_nik(nik, HARI_INI) == "", alasan
+
+
+def test_auto_rule_isi_tanggal_lahir_dari_nik():
+    out = apply_auto_rules({}, {"nik": "3201011503990001"})
+    assert out["tanggal_lahir"] == "1999-03-15"
+
+
+def test_auto_rule_tidak_menimpa_tanggal_lahir_yang_ada():
+    out = apply_auto_rules({"tanggal_lahir": "1990-01-01"}, {"nik": "3201011503990001"})
+    assert "tanggal_lahir" not in out
+
+
+def test_auto_rule_tidak_mengarang_dari_nik_sementara():
+    out = apply_auto_rules({}, {"nik": "9999393582027078"})
+    assert not out.get("tanggal_lahir")
+
+
+def test_export_punya_kolom_usia_hasil_hitungan():
+    from app.services.excel import COMPUTED_COLUMNS
+    keys = {k for k, _l, _f in COMPUTED_COLUMNS}
+    assert "usia" in keys
+    hitung = next(f for k, _l, f in COMPUTED_COLUMNS if k == "usia")
+    assert hitung({"tanggal_lahir": "1999-03-15"}) == age_from("1999-03-15")
+    # Data lama tanpa tanggal lahir tetap memakai nilai usia yang tersimpan.
+    assert hitung({"usia": 24}) == 24
+    assert hitung({}) == ""

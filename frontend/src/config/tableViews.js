@@ -19,6 +19,7 @@
 //   __rating_avg      rata-rata nilai bintang
 //   __rating_stack    tiga baris bintang (wajah/komunikasi/kedisiplinan)
 //   __blacklist_info  badge status blacklist + alasannya
+//   __usia            umur dihitung dari tanggal lahir (tidak pernah basi)
 
 export const VIEW_COLUMNS = {
   master: [
@@ -27,6 +28,7 @@ export const VIEW_COLUMNS = {
     { key: "email", variant: "mutedXs" },
     { key: "no_hp", variant: "mono" },
     { key: "alamat", variant: "truncate" },
+    { key: "__usia", label: "Usia" },
     { key: "apply" },
     { key: "__rating_avg", label: "Nilai" },
     { key: "status_interview" },

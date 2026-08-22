@@ -14,8 +14,8 @@ from ..db import db
 from ..models import BulkImportRequest, Candidate, CandidateCreate, CandidateUpdate
 from ..security import get_current_user
 from ..services import excel, history, listing, nik as nik_service, scope
-from ..services.candidates import (fill_missing_nik, from_import_row, prepare_new,
-                                  split_by_nik)
+from ..services.candidates import (assert_valid_birthdate, fill_missing_nik,
+                                  from_import_row, prepare_new, split_by_nik)
 from ..services.common import now_iso
 from ..services.notifications import on_candidate_change
 from ..services.rules import apply_auto_rules
@@ -96,6 +96,7 @@ async def create_candidate(payload: CandidateCreate, bg: BackgroundTasks,
     data = payload.model_dump()
     # NIK opsional, tapi kalau diisi harus valid & belum dipakai kandidat lain.
     data["nik"] = await nik_service.assert_available(data.get("nik"))
+    data["tanggal_lahir"] = assert_valid_birthdate(data.get("tanggal_lahir"))
     doc = prepare_new(data, user)
     await db.candidates.insert_one(doc)
     await history.log(doc["id"], doc["nama"], "created",
@@ -165,6 +166,8 @@ async def update_candidate(candidate_id: str, payload: CandidateUpdate, bg: Back
     updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
     if "nik" in updates:
         updates["nik"] = await nik_service.assert_available(updates["nik"], exclude_id=candidate_id)
+    if "tanggal_lahir" in updates:
+        updates["tanggal_lahir"] = assert_valid_birthdate(updates["tanggal_lahir"])
     updates = apply_auto_rules(existing, updates)
     updates["updated_at"] = now_iso()
     await db.candidates.update_one({"id": candidate_id}, {"$set": updates})

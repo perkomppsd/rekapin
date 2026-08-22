@@ -12,7 +12,7 @@ from typing import Callable, Dict, Tuple
 
 from ..schema import Blacklist, Kontrak, Training, Ttd
 from .. import config
-from .common import today_str, add_days
+from .common import add_days, birthdate_from_nik, today_str
 
 
 # ---------- Helper untuk menulis kondisi ----------
@@ -40,6 +40,14 @@ class Rule:
 
 
 RULES: Tuple[Rule, ...] = (
+    Rule(
+        name="Tanggal lahir kosong -> ambil dari NIK",
+        when=lambda b, i: (
+            still_empty(b, i, "tanggal_lahir")
+            and bool(birthdate_from_nik(value_of(b, i, "nik")))
+        ),
+        then=lambda b, i: {"tanggal_lahir": birthdate_from_nik(value_of(b, i, "nik"))},
+    ),
     Rule(
         name="Mulai training -> isi tanggal mulai otomatis",
         when=lambda b, i: became(b, i, "status_training", Training.ONGOING),

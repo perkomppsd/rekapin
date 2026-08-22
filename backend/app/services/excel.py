@@ -13,6 +13,14 @@ from openpyxl import Workbook, load_workbook
 
 from ..schema import EXPORT_COLUMNS, IMPORT_HEADER_MAP, IMPORT_POSITIONAL, TAB_BY_KEY
 from .candidates import coerce_value, from_import_row
+from .common import age_from
+
+# Kolom hasil hitungan (tidak disimpan di database): (key, judul, cara hitung)
+COMPUTED_COLUMNS = (
+    # Umur dihitung dari tanggal lahir. Kalau kandidat lama belum punya tanggal
+    # lahir, pakai nilai "usia" yang tersimpan sebelum kolom ini ada.
+    ("usia", "USIA", lambda d: age_from(d.get("tanggal_lahir")) or d.get("usia") or ""),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -24,9 +32,11 @@ def build_export_workbook(docs: Iterable[dict], scope: str) -> Tuple[io.BytesIO,
     ws = wb.active
     stage = TAB_BY_KEY.get(scope)
     ws.title = (stage.label.upper() if stage and stage.predicate else "MASTER DATA")[:31]
-    ws.append([label for _, label in EXPORT_COLUMNS])
+    ws.append([label for _, label in EXPORT_COLUMNS]
+              + [label for _, label, _fn in COMPUTED_COLUMNS])
     for d in docs:
-        ws.append([d.get(key, "") for key, _ in EXPORT_COLUMNS])
+        ws.append([d.get(key, "") for key, _ in EXPORT_COLUMNS]
+                  + [fn(d) for _key, _label, fn in COMPUTED_COLUMNS])
 
     stream = io.BytesIO()
     wb.save(stream)

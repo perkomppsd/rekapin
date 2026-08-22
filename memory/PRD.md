@@ -102,3 +102,13 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Alias import lama ("Status TTD", "Tanggal TTD") tetap dikenali
 - FIX: /api/meta error 500 karena FUNNEL kini 4 elemen
 - Unit test: 89 -> 105
+
+### v10 (usia -> tanggal lahir)
+- Kolom `usia` (angka statis, jadi basi) diganti `tanggal_lahir`; umur dihitung on-the-fly di tabel, form, dan export
+- Auto-rule: tanggal lahir terisi otomatis dari NIK (digit 7-12 = DDMMYY, perempuan DD+40). Dilewati kalau NIK sementara atau tanggalnya tidak wajar (umur di luar 15-70)
+- Validasi: tanggal lahir tidak boleh di masa depan / umur tak wajar / format salah
+- Form menampilkan "Umur sekarang: N tahun" yang ikut berubah saat tanggal diisi (DYNAMIC_HINTS di config/formFields.js)
+- Export tetap punya kolom USIA, tapi hasil hitungan (COMPUTED_COLUMNS di services/excel.py); data lama tanpa tanggal lahir memakai nilai usia tersimpan sebagai cadangan
+- Slot posisi import ke-4 dipakai ulang (usia -> tanggal lahir) supaya sheet paste tidak bergeser; alias: tanggal lahir, tgl lahir, dob, birth date
+- Script backfill scripts/isi_tanggal_lahir.py (dry run default, --tulis untuk simpan) -> 6 dari 7 kandidat contoh terisi dari NIK
+- Unit test: 105 -> 126
