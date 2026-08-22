@@ -17,6 +17,11 @@ db = client[config.DB_NAME]
 INDEXES = (
     ("users", "email", True),
     ("candidates", "nama", False),
+    ("candidates", "created_at", False),
+    ("candidates", "apply", False),
+    ("candidates", "status_interview", False),
+    ("candidates", "status_training", False),
+    ("candidates", "status_blacklist", False),
     ("candidates", "created_by", False),
     ("candidate_history", "candidate_id", False),
     ("candidate_history", "changed_at", False),

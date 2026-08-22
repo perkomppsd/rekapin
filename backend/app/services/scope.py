@@ -30,6 +30,11 @@ def owns(candidate: dict, user: dict) -> bool:
     )
 
 
+def assert_can_view(candidate: dict, user: dict) -> None:
+    if not is_admin(user) and not owns(candidate, user):
+        raise HTTPException(status_code=403, detail="Tidak berhak melihat kandidat ini")
+
+
 def assert_can_edit(candidate: dict, user: dict) -> None:
     if not is_admin(user) and not owns(candidate, user):
         raise HTTPException(status_code=403, detail="Tidak berhak mengubah kandidat ini")

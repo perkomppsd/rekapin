@@ -79,8 +79,14 @@ async def seed_admin() -> None:
         })
         return
     updates = {}
-    if not verify_password(admin_password, existing["password_hash"]):
+    # Password TIDAK ditimpa setiap restart — kalau tidak, penggantian password
+    # dari halaman User selalu hilang saat deploy. Reset hanya bila diminta
+    # eksplisit lewat ADMIN_PASSWORD_RESET=true.
+    if config.force_admin_password_reset() and not verify_password(
+        admin_password, existing["password_hash"]
+    ):
         updates["password_hash"] = hash_password(admin_password)
+        logger.warning("ADMIN_PASSWORD_RESET aktif — password admin di-reset dari .env")
     if existing.get("role") != "admin":
         updates["role"] = "admin"
     if "id" not in existing:

@@ -6,13 +6,14 @@ dari app/schema.py.
 
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
+from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException, Query,
+                     UploadFile)
 
 from .. import config, schema
 from ..db import db
 from ..models import BulkImportRequest, Candidate, CandidateCreate, CandidateUpdate
 from ..security import get_current_user
-from ..services import excel, history, nik as nik_service, scope
+from ..services import excel, history, listing, nik as nik_service, scope
 from ..services.candidates import prepare_new, split_by_nik
 from ..services.common import now_iso
 from ..services.notifications import on_candidate_change
@@ -21,40 +22,52 @@ from ..services.rules import apply_auto_rules
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
 
-async def _visible(user: dict, extra_filter: Optional[dict] = None) -> List[dict]:
-    query = scope.query_filter(user)
-    if extra_filter:
-        query.update(extra_filter)
-    return await db.candidates.find(query, {"_id": 0}).sort(
-        "created_at", -1
-    ).to_list(config.QUERY_LIMIT)
+async def _count(user: dict, stage_query: Optional[dict] = None) -> int:
+    """Hitung kandidat di database — tanpa menarik dokumennya."""
+    query = listing.build_query(user)
+    if stage_query:
+        query = {"$and": [query, stage_query]} if query else dict(stage_query)
+    return await db.candidates.count_documents(query)
 
 
 # ---------- Listing ----------
-@router.get("", response_model=List[Candidate])
+@router.get("")
 async def list_candidates(
     user: dict = Depends(get_current_user),
+    scope_: str = Query("all", alias="scope"),   # tab: master/interview/training/...
+    q: str = "",                                  # kata kunci pencarian
+    position: str = "",                           # filter posisi apply
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
+    page: int = 1,
+    per_page: int = config.DEFAULT_PAGE_SIZE,
 ):
-    date_q = {}
-    if date_from:
-        date_q["$gte"] = f"{date_from}T00:00:00+00:00"
-    if date_to:
-        date_q["$lte"] = f"{date_to}T23:59:59+00:00"
-    return await _visible(user, {"created_at": date_q} if date_q else None)
+    """Daftar kandidat berpaginasi. Semua penyaringan dilakukan database."""
+    query = listing.build_query(user, scope=scope_, q=q, position=position,
+                                date_from=date_from, date_to=date_to)
+    page, per_page, skip = listing.paginate(page, per_page)
+    total = await db.candidates.count_documents(query)
+    items = await db.candidates.find(query, {"_id": 0}).sort(
+        "created_at", -1
+    ).skip(skip).limit(per_page).to_list(per_page)
+    return {"items": items, **listing.page_meta(total, page, per_page)}
+
+
+@router.get("/positions")
+async def list_positions(user: dict = Depends(get_current_user)):
+    """Daftar posisi apply yang ada — untuk mengisi dropdown filter."""
+    values = await db.candidates.distinct("apply", listing.build_query(user))
+    return sorted(v for v in values if isinstance(v, str) and v.strip())
 
 
 @router.get("/funnel")
 async def funnel_stats(user: dict = Depends(get_current_user)):
-    docs = await _visible(user)
-
     def pct(cur: int, prev: int) -> float:
         return round((cur / prev) * 100, 1) if prev else 0.0
 
     stages, previous = [], None
-    for key, label, predicate in schema.FUNNEL:
-        count = len(docs) if predicate is None else sum(1 for d in docs if predicate(d))
+    for key, label, _predicate, query in schema.FUNNEL:
+        count = await _count(user, query)
         stages.append({
             "key": key,
             "label": label,
@@ -68,12 +81,11 @@ async def funnel_stats(user: dict = Depends(get_current_user)):
 
 @router.get("/stats")
 async def stats(user: dict = Depends(get_current_user)):
-    docs = await _visible(user)
-    return {
-        "total": len(docs),
-        **{tab.key: sum(1 for d in docs if tab.matches(d))
-           for tab in schema.TABS if tab.predicate is not None},
-    }
+    result = {"total": await _count(user)}
+    for tab in schema.TABS:
+        if tab.query:
+            result[tab.key] = await _count(user, tab.query)
+    return result
 
 
 # ---------- Create ----------

@@ -16,6 +16,7 @@ Semua turunan dibuat otomatis dari deklarasi di sini:
   - Metadata untuk frontend (GET /api/meta)
 """
 
+import re
 from dataclasses import dataclass, field as dc_field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -284,31 +285,63 @@ class StageSpec:
     tone: str = "indigo"                       # warna kartu statistik
     stat: bool = True                          # tampil sebagai kartu statistik
     stat_label: Optional[str] = None           # judul kartu statistik (default: label)
+    # Padanan `predicate` dalam bahasa query MongoDB, supaya filter & hitungan
+    # dikerjakan database (tidak perlu menarik semua dokumen).
+    # WAJIB setara dengan predicate — dijaga test di tests/test_schema_unit.py.
+    query: Optional[dict] = None
 
     def matches(self, c: dict) -> bool:
         return True if self.predicate is None else self.predicate(c)
 
 
 # Tab dashboard + scope export. Tambah satu entri = tab baru muncul otomatis.
+# Query Mongo untuk tiap tahap. `_ci` = pencocokan tanpa peduli huruf besar/kecil.
+def _ci_in(field: str, values: List[str]) -> dict:
+    return {field: {"$in": [re.compile(f"^{re.escape(v)}$", re.I) for v in values]}}
+
+
+_NOT_STARTED_INTERVIEW = ["", Interview.NOT_CALLED]
+Q_IN_INTERVIEW = {"$nor": [
+    {"status_interview": {"$exists": False}},
+    _ci_in("status_interview", _NOT_STARTED_INTERVIEW),
+]}
+Q_IN_TRAINING = _ci_in("status_training", [Training.ONGOING, Training.PASSED])
+Q_IN_TRAINING_ANY = _ci_in("status_training",
+                           [Training.ONGOING, Training.PASSED, Training.FINISHED])
+Q_BLACKLISTED = {"status_blacklist": re.compile(f"^{re.escape(Blacklist.YES_PREFIX)}", re.I)}
+Q_PLACED = {"penempatan_fix": {"$exists": True, "$regex": r"\S"}}
+Q_SIGNED = _ci_in("status_tanda_tangan", [Ttd.SIGNED])
+
 TABS: Tuple[StageSpec, ...] = (
     StageSpec("master", "Master Data", None, "ClipboardList", "indigo",
               stat_label="Total Kandidat"),
-    StageSpec("interview", "Interview", in_interview, "Users", "amber"),
-    StageSpec("training", "Training", in_training, "GraduationCap", "sky"),
-    StageSpec("blacklist", "Blacklist", is_blacklisted, "Ban", "rose"),
-    StageSpec("placement", "Placement", is_placed, "MapPin", "emerald"),
+    StageSpec("interview", "Interview", in_interview, "Users", "amber",
+              query=Q_IN_INTERVIEW),
+    StageSpec("training", "Training", in_training, "GraduationCap", "sky",
+              query=Q_IN_TRAINING),
+    StageSpec("blacklist", "Blacklist", is_blacklisted, "Ban", "rose",
+              query=Q_BLACKLISTED),
+    StageSpec("placement", "Placement", is_placed, "MapPin", "emerald",
+              query=Q_PLACED),
 )
+
+
+def stage_query(scope: str) -> dict:
+    """Query Mongo untuk sebuah tab. Tab tak dikenal / master -> semua kandidat."""
+    stage = TAB_BY_KEY.get(scope)
+    return dict(stage.query) if stage and stage.query else {}
 
 TAB_BY_KEY: Dict[str, StageSpec] = {t.key: t for t in TABS}
 
 # Tahapan funnel (urut). `conversion` dihitung terhadap tahap sebelumnya.
-FUNNEL: Tuple[Tuple[str, str, Optional[Callable[[dict], bool]]], ...] = (
-    ("apply", "Apply", None),
-    ("interview", "Interview", in_interview),
-    ("ttd", "Tanda Tangan", has_signed),
+# (key, label, predicate Python, query Mongo)
+FUNNEL: Tuple[Tuple[str, str, Optional[Callable[[dict], bool]], Optional[dict]], ...] = (
+    ("apply", "Apply", None, None),
+    ("interview", "Interview", in_interview, Q_IN_INTERVIEW),
+    ("ttd", "Tanda Tangan", has_signed, Q_SIGNED),
     # Funnel menghitung yang sudah selesai training juga (beda dengan tab Training).
-    ("training", "Training", lambda c: in_training(c, include_finished=True)),
-    ("placement", "Placement", is_placed),
+    ("training", "Training", lambda c: in_training(c, include_finished=True), Q_IN_TRAINING_ANY),
+    ("placement", "Placement", is_placed, Q_PLACED),
 )
 
 

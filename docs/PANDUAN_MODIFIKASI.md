@@ -191,17 +191,19 @@ Contoh: tab "Cadangan".
    )
    ```
 
-   Ini otomatis membuat: tab baru, kartu statistik baru, dan
-   `GET /api/candidates/export?scope=cadangan`.
+   `query` WAJIB diisi dan harus sepadan dengan `predicate` — dipakai untuk
+   listing & hitungan di database. Kesepadanannya dijaga otomatis oleh
+   `tests/test_stage_queries.py`, jadi kalau keliru test akan gagal:
 
-2. `frontend/src/config/tabPredicates.js` — tambah filter yang sama untuk sisi
-   browser (fungsi tidak bisa dikirim lewat JSON):
-
-   ```js
-   cadangan: (r) => (r.status_interview || "").toLowerCase() === "cadangan",
+   ```python
+   StageSpec("cadangan", "Cadangan", is_reserve, "ClipboardList", "amber",
+             query={"status_interview": re.compile("^Cadangan$", re.I)}),
    ```
 
-3. `frontend/src/config/tableViews.js` — tentukan kolom tabelnya:
+   Ini otomatis membuat: tab baru, kartu statistik baru, filter server-side,
+   dan `GET /api/candidates/export?scope=cadangan`.
+
+2. `frontend/src/config/tableViews.js` — tentukan kolom tabelnya:
 
    ```js
    cadangan: [
@@ -212,7 +214,8 @@ Contoh: tab "Cadangan".
    ],
    ```
 
-Kalau langkah 3 dilewat, tab tetap jalan dan memakai kolom `master`.
+Kalau langkah 2 dilewat, tab tetap jalan dan memakai kolom `master`.
+Frontend tidak perlu tahu cara memfilter — server yang mengerjakan.
 
 ---
 
@@ -338,6 +341,8 @@ Yang wajib ada di `backend/.env`:
 | `HASAN_EMAIL`, `HASAN_NAME` | penerima notifikasi internal kandidat diterima |
 | `WEBHOOK_CRON_SECRET` | token untuk `POST /api/cron/training-reminder` |
 | `CORS_ORIGINS` | daftar origin frontend, dipisah koma |
+| `LOCAL_UTC_OFFSET_HOURS` | zona waktu kantor untuk filter "tanggal input" (default `7` = WIB) |
+| `ADMIN_PASSWORD_RESET` | set `true` SEKALI kalau password admin lupa; selain itu password yang diganti dari halaman User tidak akan ditimpa saat restart |
 
 Frontend hanya perlu `REACT_APP_BACKEND_URL` di `frontend/.env`.
 
@@ -356,7 +361,7 @@ cd backend && uvicorn server:app --reload --port 8001
 cd frontend && yarn install && yarn start
 
 # unit test (tanpa server, cepat)
-cd backend && pytest tests/test_schema_unit.py
+cd backend && pytest tests/test_schema_unit.py tests/test_stage_queries.py
 
 # test integrasi (butuh server + MongoDB hidup)
 cd backend && pytest tests/test_rekapin_backend.py

@@ -7,9 +7,11 @@ Model yang perlu diedit manual di file ini hanya yang bukan kandidat
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, create_model
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, create_model
 
-from . import schema
+from . import config, schema
+
+_PASSWORD = Field(min_length=config.MIN_PASSWORD_LENGTH)
 
 # ---------------------------------------------------------------------------
 # Model kandidat (generated)
@@ -83,13 +85,13 @@ class UserOut(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr
     name: str
-    password: str
+    password: str = _PASSWORD
     role: str = "recruiter"  # admin | recruiter
 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
-    password: Optional[str] = None
+    password: Optional[str] = Field(default=None, min_length=config.MIN_PASSWORD_LENGTH)
     role: Optional[str] = None
 
 

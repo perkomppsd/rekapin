@@ -139,7 +139,7 @@ def test_tab_dan_scope_export_memakai_daftar_yang_sama():
 def test_funnel_urut_dan_tidak_naik():
     counts = [
         len(CANDIDATES) if pred is None else sum(1 for c in CANDIDATES if pred(c))
-        for _, _, pred in schema.FUNNEL
+        for _, _, pred, _q in schema.FUNNEL
     ]
     assert counts[0] == len(CANDIDATES)
     assert all(c >= 0 for c in counts)
@@ -329,3 +329,96 @@ def test_import_excel_mengenali_kolom_no_ktp():
     assert len(rows) == 1
     # Normalisasi final dilakukan saat simpan; di sini cukup nilainya terbaca.
     assert nik_service.normalize(rows[0]["nik"]) == "3201011234567890"
+
+
+# ---------------------------------------------------------------------------
+# Listing: query builder, paginasi, zona waktu
+# ---------------------------------------------------------------------------
+from app import config as app_config  # noqa: E402
+from app.services import listing  # noqa: E402
+
+ADMIN_USER = {"id": "a1", "email": "admin@example.com", "role": "admin"}
+RECRUITER = {"id": "r1", "email": "pic@example.com", "role": "recruiter"}
+
+
+def test_admin_tidak_dibatasi_tapi_recruiter_dibatasi():
+    assert listing.build_query(ADMIN_USER) == {}
+    q = listing.build_query(RECRUITER)
+    assert "$or" in q and {"created_by": "r1"} in q["$or"]
+
+
+def test_filter_tab_masuk_ke_query():
+    q = listing.build_query(ADMIN_USER, scope="blacklist")
+    assert q == schema.stage_query("blacklist")
+
+
+def test_scope_tak_dikenal_tidak_memfilter():
+    assert listing.build_query(ADMIN_USER, scope="tidak-ada") == {}
+    assert listing.build_query(ADMIN_USER, scope="master") == {}
+
+
+def test_pencarian_mencakup_semua_field_searchable():
+    q = listing.build_query(ADMIN_USER, q="budi")
+    fields = {list(c.keys())[0] for c in q["$or"]}
+    assert set(schema.SEARCHABLE_FIELDS) <= fields
+
+
+def test_pencarian_angka_juga_dicocokkan_tanpa_pemisah():
+    q = listing.build_query(ADMIN_USER, q="3201 0112")
+    patterns = {c[list(c.keys())[0]]["$regex"] for c in q["$or"]}
+    assert any("32010112" in p for p in patterns), "NIK berspasi harus tetap ketemu"
+
+
+def test_karakter_khusus_pada_pencarian_di_escape():
+    # Tanpa escape, ".*" akan cocok ke semua dokumen.
+    q = listing.build_query(ADMIN_USER, q=".*")
+    patterns = {c[list(c.keys())[0]]["$regex"] for c in q["$or"]}
+    assert all(p == r"\.\*" for p in patterns)
+
+
+def test_filter_posisi():
+    assert listing.build_query(ADMIN_USER, position="Kasir") == {"apply": "Kasir"}
+    assert listing.build_query(ADMIN_USER, position="all") == {}
+
+
+def test_batas_tanggal_memakai_zona_waktu_lokal():
+    q = listing.build_query(ADMIN_USER, date_from="2026-08-23", date_to="2026-08-23")
+    window = q["created_at"]
+    offset = app_config.LOCAL_UTC_OFFSET_HOURS
+    assert window["$gte"].endswith(f"+{offset:02d}:00"), window
+    # Kandidat yang di-input 02:00 WIB tanggal 23 harus masuk filter tanggal 23.
+    dini_hari_wib = "2026-08-23T02:00:00+07:00"
+    assert window["$gte"] <= dini_hari_wib <= window["$lte"]
+
+
+def test_paginasi_dibersihkan():
+    assert listing.paginate(0, 0)[0] == 1                      # page minimal 1
+    assert listing.paginate(1, 99999)[1] == app_config.MAX_PAGE_SIZE
+    assert listing.paginate(3, 20)[2] == 40                    # skip
+    assert listing.paginate(-5, 10)[0] == 1
+
+
+@pytest.mark.parametrize("total,per_page,pages", [
+    (0, 50, 1), (1, 50, 1), (50, 50, 1), (51, 50, 2), (127, 50, 3),
+])
+def test_jumlah_halaman(total, per_page, pages):
+    assert listing.page_meta(total, 1, per_page)["pages"] == pages
+
+
+def test_setiap_tab_berpredikat_punya_query_mongo():
+    """Kalau menambah tab baru, `query` wajib diisi — kalau tidak, listing &
+    hitungan akan salah (kesepadanannya diuji di tests/test_stage_queries.py)."""
+    for tab in schema.TABS:
+        if tab.predicate is not None:
+            assert tab.query, f"tab '{tab.key}' belum punya query Mongo"
+    for key, _label, predicate, query in schema.FUNNEL:
+        if predicate is not None:
+            assert query, f"tahap funnel '{key}' belum punya query Mongo"
+
+
+def test_aturan_panjang_password():
+    from app.models import UserCreate
+    with pytest.raises(Exception):
+        UserCreate(email="a@example.com", name="A", password="x" * (app_config.MIN_PASSWORD_LENGTH - 1))
+    ok = UserCreate(email="a@example.com", name="A", password="x" * app_config.MIN_PASSWORD_LENGTH)
+    assert ok.password

@@ -24,6 +24,11 @@ DB_NAME = os.environ["DB_NAME"]
 # ---------- Auth ----------
 JWT_ALGORITHM = "HS256"
 TOKEN_TTL_HOURS = 12
+MIN_PASSWORD_LENGTH = 8
+
+# Paginasi listing kandidat
+DEFAULT_PAGE_SIZE = 50
+MAX_PAGE_SIZE = 200
 
 # ---------- Aplikasi ----------
 APP_TITLE = "HR Recruitment Master Data"
@@ -52,7 +57,11 @@ HIRE_NOTIFY_NAME = os.environ.get("HASAN_NAME", "Hasan")
 # ---------- Aturan bisnis ----------
 TRAINING_PERIOD_DAYS = 90          # masa training (3 bulan)
 TRAINING_REMINDER_DAYS = (7, 0)    # kirim reminder H-7 dan hari-H
-QUERY_LIMIT = 5000                 # batas dokumen per query listing
+QUERY_LIMIT = 5000                 # batas dokumen untuk export & job batch
+
+# Zona waktu kantor. Dipakai agar filter "tanggal input" mengikuti hari lokal,
+# bukan hari UTC (WIB = 7, WITA = 8, WIT = 9).
+LOCAL_UTC_OFFSET_HOURS = int(os.environ.get("LOCAL_UTC_OFFSET_HOURS", "7"))
 
 
 # ---------- Secret & kredensial: dibaca lazy supaya bisa dirotasi ----------
@@ -66,6 +75,13 @@ def cron_secret() -> str:
 
 def admin_email() -> str:
     return os.environ.get("ADMIN_EMAIL", "").strip().lower()
+
+
+def force_admin_password_reset() -> bool:
+    """Set ADMIN_PASSWORD_RESET=true SEKALI untuk memaksa password admin kembali
+    ke isi ADMIN_PASSWORD (dipakai kalau password admin lupa). Selain itu,
+    password yang diganti dari halaman User TIDAK akan ditimpa saat restart."""
+    return os.environ.get("ADMIN_PASSWORD_RESET", "").strip().lower() in ("1", "true", "yes")
 
 
 def seed_admin_credentials() -> Tuple[str, str, str]:

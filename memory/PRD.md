@@ -68,3 +68,16 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Kotak pencarian dashboard kini membaca `searchable_fields` dari /api/meta (bukan daftar hardcoded)
 - Semua jejak Emergent dihapus (branding, script analitik/PostHog, dependency build, proxy email jadi konfigurasi `EMAIL_API_URL`)
 - Unit test: 35 -> 59
+
+### v7 (perbaikan keamanan + paginasi)
+- FIX: riwayat perubahan bocor antar-recruiter — `/candidates/history` & `/candidates/{id}/history` sekarang mengikuti aturan akses kandidat (admin semua, recruiter hanya miliknya)
+- FIX: password admin tidak lagi ter-reset dari .env setiap restart; reset hanya bila `ADMIN_PASSWORD_RESET=true`
+- FIX: `/api/cron/training-reminder` menolak (503) kalau `WEBHOOK_CRON_SECRET` kosong — sebelumnya header 'Bearer ' bisa lolos
+- FIX: panjang password minimum (8) divalidasi di backend, bukan hanya di form
+- FIX: filter "tanggal input" memakai zona waktu lokal (`LOCAL_UTC_OFFSET_HOURS`, default WIB) — sebelumnya input 00:00-07:00 WIB masuk ke tanggal sebelumnya
+- Paginasi + filter server-side: `GET /api/candidates?scope=&q=&position=&date_from=&date_to=&page=&per_page=` mengembalikan `{items, total, page, pages, per_page}`; batas keras 5.000 kandidat hilang
+- Statistik & funnel pakai `count_documents` (bukan menarik semua dokumen); endpoint baru `/candidates/positions`
+- StageSpec dapat `query` Mongo sepadan `predicate`; kesepadanannya dijaga `tests/test_stage_queries.py`
+- Export mengikuti tab & filter yang aktif di layar
+- `config/tabPredicates.js` dihapus — filter tab tidak lagi diduplikasi di frontend
+- Unit test: 59 -> 84

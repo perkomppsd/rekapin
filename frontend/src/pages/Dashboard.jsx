@@ -1,8 +1,12 @@
 // Dashboard utama.
 //
 // Tab, kartu statistik, dan funnel TIDAK di-hardcode di sini: daftarnya datang
-// dari /api/meta (backend/app/schema.py). Filter per tab ada di
-// config/tabPredicates.js, kolom tabel di config/tableViews.js.
+// dari /api/meta (backend/app/schema.py). Kolom tabel diatur di
+// config/tableViews.js.
+//
+// Semua penyaringan (tab, pencarian, posisi, tanggal) dan paginasi dikerjakan
+// SERVER — lihat backend/app/services/listing.py. Browser tidak lagi menarik
+// seluruh koleksi kandidat.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -29,12 +33,12 @@ import BulkImportDialog from "@/components/BulkImportDialog";
 import HistoryDialog from "@/components/HistoryDialog";
 import EmailTemplateDialog from "@/components/EmailTemplateDialog";
 import FunnelChart from "@/components/FunnelChart";
-import { filterByTab } from "@/config/tabPredicates";
 import { iconFor } from "@/config/icons";
+import Pagination from "@/components/Pagination";
 import { T, tone } from "@/config/theme";
 
-// Dipakai kalau /api/meta belum termuat.
-const DEFAULT_SEARCH_FIELDS = ["nama", "nik", "email", "no_hp", "apply", "pic"];
+const PER_PAGE = 50;
+const SEARCH_DEBOUNCE_MS = 350;
 
 // Laporkan hasil import: berapa masuk, berapa dilewati (NIK dobel / tidak valid).
 function reportImport(data, verb) {
@@ -79,10 +83,15 @@ export default function Dashboard() {
 
   const [tab, setTab] = useState("master");
   const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({ total: 0, page: 1, pages: 1, per_page: PER_PAGE });
+  const [page, setPage] = useState(1);
+  const [stats, setStats] = useState({});
+  const [positions, setPositions] = useState([]);
   const [customFields, setCustomFields] = useState([]);
   const [funnel, setFunnel] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [qLive, setQLive] = useState("");   // isi kotak pencarian sebelum debounce
   const [posFilter, setPosFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -97,64 +106,51 @@ export default function Dashboard() {
   const fileInputRef = useRef(null);
   const isAdmin = user?.role === "admin";
 
+  // Parameter filter yang dikirim ke server (dipakai listing & export).
+  const filterParams = useMemo(() => {
+    const p = { scope: tab };
+    if (q.trim()) p.q = q.trim();
+    if (posFilter !== "all") p.position = posFilter;
+    if (dateFrom) p.date_from = dateFrom;
+    if (dateTo) p.date_to = dateTo;
+    return p;
+  }, [tab, q, posFilter, dateFrom, dateTo]);
+
+  // Debounce kotak pencarian supaya tidak memanggil server tiap ketikan.
+  useEffect(() => {
+    const t = setTimeout(() => setQ(qLive), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [qLive]);
+
+  // Kembali ke halaman 1 setiap filter berubah.
+  useEffect(() => { setPage(1); }, [tab, q, posFilter, dateFrom, dateTo]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (dateFrom) params.append("date_from", dateFrom);
-      if (dateTo) params.append("date_to", dateTo);
-      const [c, cf, fn] = await Promise.all([
-        api.get(`/candidates${params.toString() ? "?" + params.toString() : ""}`),
-        api.get("/custom-fields"),
+      const listParams = { ...filterParams, page, per_page: PER_PAGE };
+      const [list, st, fn, pos, cf] = await Promise.all([
+        api.get("/candidates", { params: listParams }),
+        api.get("/candidates/stats"),
         api.get("/candidates/funnel"),
+        api.get("/candidates/positions"),
+        api.get("/custom-fields"),
       ]);
-      setRows(c.data);
-      setCustomFields(cf.data || []);
+      const { items, ...meta } = list.data;
+      setRows(items || []);
+      setPageInfo(meta);
+      setStats(st.data || {});
       setFunnel(fn.data.stages || []);
+      setPositions(pos.data || []);
+      setCustomFields(cf.data || []);
     } catch (e) {
       toast.error(describeApiError(e, "Gagal memuat data"));
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo]);
+  }, [filterParams, page]);
 
   useEffect(() => { load(); }, [load]);
-
-  const positions = useMemo(() => {
-    const s = new Set();
-    rows.forEach((r) => r.apply && s.add(r.apply));
-    return Array.from(s);
-  }, [rows]);
-
-  const stats = useMemo(
-    () => Object.fromEntries(tabs.map((t) => [t.key, filterByTab(rows, t.key).length])),
-    [rows, tabs],
-  );
-
-  // Field yang ikut dicari: ditandai `searchable=True` di backend/app/schema.py.
-  const searchFields = useMemo(
-    () => (meta.searchable_fields?.length
-      ? meta.searchable_fields
-      : DEFAULT_SEARCH_FIELDS),
-    [meta.searchable_fields],
-  );
-
-  const filtered = useMemo(() => {
-    let list = filterByTab(rows, tab);
-    if (q.trim()) {
-      // Pencarian NIK dinormalisasi: user boleh ketik dengan spasi/titik.
-      const needle = q.trim().toLowerCase();
-      const digits = needle.replace(/\D/g, "");
-      list = list.filter((r) =>
-        searchFields.some((k) => {
-          const value = (r[k] || "").toString().toLowerCase();
-          if (!value) return false;
-          return value.includes(needle) || (digits && value.includes(digits));
-        }));
-    }
-    if (posFilter !== "all") list = list.filter((r) => r.apply === posFilter);
-    return list;
-  }, [rows, tab, q, posFilter, searchFields]);
 
   const handleSubmit = async (payload) => {
     try {
@@ -255,9 +251,10 @@ export default function Dashboard() {
     }
   };
 
-  const exportExcel = async (scope) => {
+  const exportExcel = async () => {
     try {
-      const res = await fetch(`${API}/candidates/export?scope=${scope}`, {
+      const query = new URLSearchParams(filterParams).toString();
+      const res = await fetch(`${API}/candidates/export?${query}`, {
         headers: { Authorization: `Bearer ${tokenStore.get()}` },
       });
       if (!res.ok) throw new Error("Export gagal");
@@ -265,7 +262,7 @@ export default function Dashboard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `recruitment_${scope}.xlsx`;
+      a.download = `recruitment_${tab}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -306,7 +303,7 @@ export default function Dashboard() {
               className={`rounded-full pill-btn ${tone("indigo", "button")}`}>
               <ClipboardPaste className="w-4 h-4 mr-2" /> Import Massal
             </Button>
-            <Button onClick={() => exportExcel(tab)} variant="outline" data-testid="btn-export"
+            <Button onClick={exportExcel} variant="outline" data-testid="btn-export"
               className={T.btnOutline}>
               <Download className="w-4 h-4 mr-2" /> Export Excel
             </Button>
@@ -330,7 +327,7 @@ export default function Dashboard() {
               key={t.key}
               icon={iconFor(t.icon)}
               label={t.stat_label || t.label}
-              value={stats[t.key] ?? 0}
+              value={(t.key === "master" ? stats.total : stats[t.key]) ?? 0}
               toneName={t.tone}
               testid={t.key === "master" ? "stat-total" : `stat-${t.key}`}
             />
@@ -360,7 +357,7 @@ export default function Dashboard() {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <Input data-testid="search-input"
                   placeholder="Cari nama, NIK, email, no HP, posisi, PIC..."
-                  value={q} onChange={(e) => setQ(e.target.value)}
+                  value={qLive} onChange={(e) => setQLive(e.target.value)}
                   className={`pl-9 ${T.inputLight}`} />
               </div>
               <Select value={posFilter} onValueChange={setPosFilter}>
@@ -404,7 +401,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <CandidateTable
-                    rows={filtered}
+                    rows={rows}
                     view={t.key}
                     onEdit={(r) => { setEditing(r); setFormOpen(true); }}
                     onDelete={(r) => setDeleteTarget(r)}
@@ -412,6 +409,9 @@ export default function Dashboard() {
                     onShowHistory={handleShowHistory}
                     onSendEmail={handleSendEmail}
                   />
+                )}
+                {!loading && (
+                  <Pagination info={pageInfo} onChange={setPage} disabled={loading} />
                 )}
               </TabsContent>
             ))}
