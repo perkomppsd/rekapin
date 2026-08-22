@@ -25,6 +25,7 @@ export default function ReferenceListManager({ list }) {
   const [form, setForm] = useState({ nama: "", keterangan: "" });
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(null);      // { id, nama, keterangan }
+  const [savingEdit, setSavingEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = useCallback(async () => {
@@ -56,6 +57,12 @@ export default function ReferenceListManager({ list }) {
   };
 
   const simpanEdit = async () => {
+    if (savingEdit) return;                       // cegah dobel saat Enter ditekan cepat
+    if (!editing.nama.trim()) {
+      toast.error(`Nama ${list.singular.toLowerCase()} tidak boleh kosong`);
+      return;
+    }
+    setSavingEdit(true);
     try {
       await api.put(`/references/${list.key}/${editing.id}`, {
         nama: editing.nama, keterangan: editing.keterangan,
@@ -65,6 +72,19 @@ export default function ReferenceListManager({ list }) {
       await refresh();
     } catch (e) {
       toast.error(describeApiError(e, "Gagal menyimpan"));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Enter = simpan, Esc = batal — supaya edit beruntun bisa lewat keyboard saja.
+  const editKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      simpanEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setEditing(null);
     }
   };
 
@@ -126,18 +146,26 @@ export default function ReferenceListManager({ list }) {
             <li key={it.id} className="px-4 py-3" data-testid={`row-${list.key}-${it.id}`}>
               {editing?.id === it.id ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                  <Input value={editing.nama} className={T.input}
+                  <Input autoFocus value={editing.nama} className={T.input}
+                    data-testid={`edit-${list.key}-nama`}
+                    placeholder={`Nama ${list.singular.toLowerCase()}`}
+                    onKeyDown={editKeyDown}
                     onChange={(e) => setEditing({ ...editing, nama: e.target.value })} />
                   <Input value={editing.keterangan} className={T.input}
+                    data-testid={`edit-${list.key}-keterangan`}
+                    placeholder={list.note_label}
+                    onKeyDown={editKeyDown}
                     onChange={(e) => setEditing({ ...editing, keterangan: e.target.value })} />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={simpanEdit} className={T.btnPrimary}>
-                      <Check className="w-4 h-4 mr-1" /> Simpan
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={simpanEdit} disabled={savingEdit}
+                      className={T.btnPrimary} data-testid={`btn-save-${list.key}`}>
+                      <Check className="w-4 h-4 mr-1" /> {savingEdit ? "..." : "Simpan"}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditing(null)}
-                      className={T.btnGhostPlain}>
+                      className={T.btnGhostPlain} title="Batal (Esc)">
                       <X className="w-4 h-4" />
                     </Button>
+                    <span className={`${T.hint} hidden lg:inline`}>Enter simpan · Esc batal</span>
                   </div>
                 </div>
               ) : (
