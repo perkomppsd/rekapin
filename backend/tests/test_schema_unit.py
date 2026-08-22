@@ -76,7 +76,9 @@ def test_model_kandidat_ikut_field_schema():
 def test_field_wajib_divalidasi():
     with pytest.raises(Exception):
         CandidateCreate()
-    assert CandidateCreate(nama="Budi").nama == "Budi"
+    wajib = {f.key: "3201011234567890" if f.key == "nik" else "Budi"
+             for f in schema.FIELDS if f.required}
+    assert CandidateCreate(**wajib).nama == "Budi"
 
 
 def test_label_riwayat_sama_dengan_field_yang_dilacak():
@@ -422,3 +424,40 @@ def test_aturan_panjang_password():
         UserCreate(email="a@example.com", name="A", password="x" * (app_config.MIN_PASSWORD_LENGTH - 1))
     ok = UserCreate(email="a@example.com", name="A", password="x" * app_config.MIN_PASSWORD_LENGTH)
     assert ok.password
+
+
+# ---------------------------------------------------------------------------
+# NIK wajib + NIK sementara
+# ---------------------------------------------------------------------------
+def test_nik_wajib_diisi():
+    assert schema.FIELD_BY_KEY["nik"].required
+    with pytest.raises(Exception):
+        CandidateCreate(nama="Tanpa NIK")
+    assert CandidateCreate(nama="Ada", nik="3201011234567890").nik
+
+
+def test_nik_sementara_berawalan_khusus_dan_16_digit():
+    prefix = nik_service.TEMP_PREFIX
+    contoh = prefix + "0" * (nik_service.NIK_LENGTH - len(prefix))
+    assert nik_service.is_valid(contoh), "NIK sementara harus lolos validasi format"
+    assert nik_service.is_temporary(contoh)
+    # Awalan 9999 bukan kode wilayah yang sah, jadi tidak bentrok dengan NIK asli.
+    assert prefix.startswith("9999")
+
+
+def test_nik_asli_tidak_dianggap_sementara():
+    assert not nik_service.is_temporary("3201011234567890")
+    assert not nik_service.is_temporary("")
+
+
+def test_baris_import_tanpa_nik_tetap_lolos_validasi():
+    from app.services.candidates import from_import_row
+    doc = from_import_row({"nama": "Sheet Lama"})
+    assert doc is not None, "baris tanpa NIK tidak boleh langsung dibuang"
+    assert doc["nik"] == "", "NIK dikosongkan agar diisi NIK sementara"
+
+
+def test_baris_import_tanpa_nama_tetap_dibuang():
+    from app.services.candidates import from_import_row
+    assert from_import_row({"nik": "3201011234567890"}) is None
+    assert from_import_row({"nama": "   "}) is None

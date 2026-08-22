@@ -119,9 +119,9 @@ FIELDS: Tuple[FieldSpec, ...] = (
     # masuk dua kali dan riwayat blacklist-nya ikut terbawa saat melamar lagi.
     # paste_index diletakkan paling akhir supaya sheet paste yang sudah ada
     # (10 kolom) tidak bergeser — NIK jadi kolom ke-11 yang opsional.
-    FieldSpec("nik", "NIK (KTP)", group="pribadi", searchable=True, unique=True,
-              sensitive=True, placeholder="16 digit angka",
-              hint="Dipakai untuk mencegah data ganda & cek blacklist",
+    FieldSpec("nik", "NIK (KTP)", group="pribadi", required=True, searchable=True,
+              unique=True, sensitive=True, placeholder="16 digit angka",
+              hint="Wajib. Belum punya NIK? Pakai tombol di sebelah untuk NIK sementara",
               aliases=("no ktp", "ktp", "nomor ktp", "no. ktp", "nomor induk kependudukan"),
               paste_index=10),
     FieldSpec("email", "Email", type="email", group="pribadi", searchable=True,

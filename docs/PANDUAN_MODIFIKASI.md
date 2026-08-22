@@ -154,7 +154,17 @@ Yang otomatis ikut aktif:
   bukan menggagalkan seluruh file.
 
 Validasi format khusus NIK ada di `app/services/nik.py` (16 digit, spasi/titik/
-strip otomatis dibersihkan). Kalau menambah field unik lain yang butuh format
+strip otomatis dibersihkan).
+
+**NIK wajib diisi.** Untuk kandidat yang KTP-nya belum dikumpulkan, tersedia
+**NIK sementara**: tombol "Belum ada NIK" di form memanggil
+`GET /api/candidates/nik-sementara` dan mengisi nomor berawalan `9999`
+(bukan kode wilayah yang sah, jadi tidak mungkin bentrok dengan NIK asli),
+dijamin belum dipakai. Di tabel nomor ini tampil dengan label "sementara".
+Baris import tanpa NIK diberi NIK sementara otomatis, dan jumlahnya dilaporkan.
+
+Data lama yang NIK-nya kosong bisa diisi sekali jalan:
+`cd backend && .venv/bin/python scripts/isi_nik_sementara.py` Kalau menambah field unik lain yang butuh format
 khusus, tiru pola file itu.
 
 `searchable=True` membuat field ikut dicari kotak pencarian dashboard.

@@ -44,7 +44,14 @@ const SEARCH_DEBOUNCE_MS = 350;
 function reportImport(data, verb) {
   const inserted = data.inserted ?? 0;
   const skipped = data.skipped ?? 0;
+  const autoNik = data.auto_nik ?? 0;
   if (inserted) toast.success(`${inserted} kandidat berhasil ${verb}`);
+  if (autoNik) {
+    toast.info(`${autoNik} kandidat diberi NIK sementara`, {
+      description: "Baris tanpa NIK diberi nomor sementara. Ganti kalau KTP sudah terkumpul.",
+      duration: 8000,
+    });
+  }
   if (!skipped) {
     if (!inserted) toast.info("Tidak ada kandidat baru yang masuk.");
     return;

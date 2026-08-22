@@ -9,8 +9,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import StarRating from "@/components/StarRating";
+import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 import { FORM, T } from "@/config/theme";
-import { testIdFor } from "@/config/formFields";
+import { FIELD_ACTIONS, testIdFor } from "@/config/formFields";
 
 const NONE = "__none__";
 
@@ -73,13 +76,47 @@ function DefaultInput({ field, value, onChange, testid }) {
   );
 }
 
+function FieldAction({ action, fieldKey, onChange }) {
+  const [busy, setBusy] = React.useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.get(action.fetch);
+      onChange(action.pick(data));
+    } catch {
+      toast.error("Gagal mengambil nilai otomatis. Coba lagi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={run} disabled={busy}
+      title={action.title} data-testid={`action-${fieldKey.replace(/_/g, "-")}`}
+      className={`${T.btnOutline} shrink-0 whitespace-nowrap`}>
+      {busy ? "..." : action.label}
+    </Button>
+  );
+}
+
 export default function FieldInput({ field, label, value, onChange, testid }) {
   const Renderer = RENDERERS[field.type] || DefaultInput;
   const id = testid || testIdFor(field);
+  const action = FIELD_ACTIONS[field.key];
+  const showAction = action && !action.hideIf?.(value);
   return (
     <div className={`space-y-1.5 ${field.span === 2 ? "md:col-span-2" : ""}`}>
-      <Label className={T.label}>{label || field.label}</Label>
-      <Renderer field={field} value={value} onChange={onChange} testid={id} />
+      <Label className={T.label}>
+        {label || field.label}
+        {field.required ? <span className="text-rose-400 ml-1">*</span> : null}
+      </Label>
+      <div className={showAction ? "flex items-center gap-2" : undefined}>
+        <div className={showAction ? "flex-1 min-w-0" : undefined}>
+          <Renderer field={field} value={value} onChange={onChange} testid={id} />
+        </div>
+        {showAction && (
+          <FieldAction action={action} fieldKey={field.key} onChange={onChange} />
+        )}
+      </div>
       {field.hint ? <p className={T.hint}>{field.hint}</p> : null}
     </div>
   );

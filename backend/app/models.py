@@ -60,7 +60,10 @@ Candidate = create_model(
 
 
 class BulkImportRequest(BaseModel):
-    items: List[CandidateCreate]
+    # Sengaja dict mentah, bukan List[CandidateCreate]: validasi dilakukan
+    # per baris di services/candidates.py supaya satu baris rusak tidak
+    # menggagalkan seluruh import.
+    items: List[Dict[str, Any]]
 
 
 class SendEmailRequest(BaseModel):

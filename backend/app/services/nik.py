@@ -11,6 +11,7 @@ partial unique index di MongoDB (jaring pengaman kalau ada dua request bersamaan
 """
 
 import re
+import secrets
 from typing import Optional
 
 from fastapi import HTTPException
@@ -19,6 +20,11 @@ from ..db import db
 from ..schema import is_blacklisted
 
 NIK_LENGTH = 16
+
+# NIK asli selalu dimulai kode wilayah (provinsi 11-94), jadi awalan "9999"
+# tidak mungkin milik orang sungguhan. Dipakai untuk kandidat yang KTP-nya
+# belum dikumpulkan: tetap 16 digit, dijamin unik, dan mudah dicari lagi.
+TEMP_PREFIX = "9999"
 _NON_DIGIT = re.compile(r"\D")
 # Pemisah yang ditoleransi saat user mengetik: spasi, titik, strip.
 _ILLEGAL_CHARS = re.compile(r"[^\d\s.\-]")
@@ -54,6 +60,21 @@ def validate(value) -> str:
     if reason:
         raise HTTPException(status_code=400, detail=reason)
     return normalize(value)
+
+
+def is_temporary(nik: str) -> bool:
+    return bool(nik) and str(nik).startswith(TEMP_PREFIX)
+
+
+async def generate_temporary(max_attempts: int = 10) -> str:
+    """Buat NIK sementara yang belum dipakai siapa pun."""
+    for _ in range(max_attempts):
+        candidate = TEMP_PREFIX + "".join(
+            str(secrets.randbelow(10)) for _ in range(NIK_LENGTH - len(TEMP_PREFIX))
+        )
+        if await find_owner(candidate) is None:
+            return candidate
+    raise HTTPException(status_code=500, detail="Gagal membuat NIK sementara, coba lagi")
 
 
 async def find_owner(nik: str, exclude_id: Optional[str] = None) -> Optional[dict]:

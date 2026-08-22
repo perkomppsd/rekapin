@@ -36,14 +36,37 @@ def coerce_value(key: str, raw) -> Optional[object]:
     return str(raw).strip()
 
 
+# Placeholder saat validasi baris import: NIK asli/sementara diisi setelahnya
+# oleh fill_missing_nik(). Tanpa ini, model menolak baris karena NIK wajib.
+_NIK_PLACEHOLDER = "0" * 16
+
+
 def from_import_row(values: dict) -> Optional[dict]:
     """Validasi satu baris import. Return dict siap simpan, atau None kalau invalid."""
-    if not values.get("nama"):
+    if not str(values.get("nama") or "").strip():
         return None
+    data = dict(values)
+    had_nik = bool(nik_service.normalize(data.get("nik")))
+    if not had_nik:
+        data["nik"] = _NIK_PLACEHOLDER
     try:
-        return CandidateCreate(**values).model_dump()
+        doc = CandidateCreate(**data).model_dump()
     except Exception:
         return None
+    if not had_nik:
+        doc["nik"] = ""        # dikosongkan lagi supaya fill_missing_nik yang mengisi
+    return doc
+
+
+async def fill_missing_nik(rows: List[dict]) -> int:
+    """NIK wajib, tapi sheet lama sering tidak punya kolom NIK. Baris tanpa NIK
+    diberi NIK sementara supaya import tidak gagal. Return jumlah yang diisi."""
+    filled = 0
+    for row in rows:
+        if not nik_service.normalize(row.get("nik")):
+            row["nik"] = await nik_service.generate_temporary()
+            filled += 1
+    return filled
 
 
 async def split_by_nik(rows: List[dict]) -> Tuple[List[dict], List[dict]]:

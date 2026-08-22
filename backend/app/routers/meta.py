@@ -8,6 +8,7 @@ ikut berubah tanpa edit kode frontend.
 from fastapi import APIRouter, Depends
 
 from .. import schema
+from ..services import nik as nik_service
 from ..emailing import templates
 from ..security import get_current_user
 
@@ -47,6 +48,7 @@ def build_meta() -> dict:
         ],
         "system_fields": [{"key": k, "label": label} for k, label in schema.SYSTEM_FIELDS],
         "searchable_fields": schema.SEARCHABLE_FIELDS,
+        "nik_temp_prefix": nik_service.TEMP_PREFIX,
     }
 
 

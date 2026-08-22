@@ -81,3 +81,12 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Export mengikuti tab & filter yang aktif di layar
 - `config/tabPredicates.js` dihapus — filter tab tidak lagi diduplikasi di frontend
 - Unit test: 59 -> 84
+
+### v8 (NIK wajib)
+- NIK jadi wajib (`required=True`); simpan tanpa NIK -> 422
+- NIK sementara untuk kandidat yang KTP-nya belum ada: awalan 9999 (bukan kode wilayah sah), dijamin unik, tampil berlabel "sementara" di tabel
+- Tombol "Belum ada NIK" di form (config/formFields.js -> FIELD_ACTIONS) memanggil GET /candidates/nik-sementara
+- Import: baris tanpa NIK diberi NIK sementara otomatis (`auto_nik` dilaporkan ke UI), jadi sheet lama tanpa kolom NIK tetap bisa masuk
+- BulkImportRequest.items jadi List[dict] + validasi per baris -> satu baris rusak tidak lagi menggagalkan seluruh paste (422)
+- Script migrasi backend/scripts/isi_nik_sementara.py untuk data lama
+- Unit test: 84 -> 89

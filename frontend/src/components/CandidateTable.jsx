@@ -21,6 +21,22 @@ import { T, tone } from "@/config/theme";
 
 const RATING_FIELDS = ["nilai_wajah", "nilai_komunikasi", "nilai_kedisiplinan"];
 
+// NIK sementara (kandidat yang KTP-nya belum dikumpulkan) ditampilkan samar
+// dan diberi label, supaya kelihatan mana yang masih perlu ditindaklanjuti.
+function NikCell({ value, tempPrefix }) {
+  if (!value) return <span className="text-slate-500">—</span>;
+  const sementara = tempPrefix && String(value).startsWith(tempPrefix);
+  if (!sementara) return <span className="text-slate-300 font-mono text-xs">{value}</span>;
+  return (
+    <span className="inline-flex items-center gap-1.5" title="NIK sementara — ganti kalau KTP sudah ada">
+      <span className="text-slate-500 font-mono text-xs">{value}</span>
+      <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300">
+        sementara
+      </span>
+    </span>
+  );
+}
+
 function StatusPill({ fieldKey, value }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${tone(toneForStatus(fieldKey, value), "pill")}`}>
@@ -82,11 +98,12 @@ const SPECIAL_CELLS = {
   ),
 };
 
-function Cell({ column, row, field }) {
+function Cell({ column, row, field, tempPrefix }) {
   const special = SPECIAL_CELLS[column.key];
   if (special) return special(row);
 
   const value = row[column.key] || (column.fallback ? row[column.fallback] : "");
+  if (column.key === "nik") return <NikCell value={value} tempPrefix={tempPrefix} />;
   const variant = column.variant
     || (field?.type === "select" ? "status" : null)
     || "text";
@@ -172,7 +189,8 @@ export default function CandidateTable({
                 className="border-slate-800/70 hover:bg-slate-800/40 data-row">
                 {columns.map((c) => (
                   <TableCell key={c.key}>
-                    <Cell column={c} row={row} field={meta.fieldByKey?.[c.key]} />
+                    <Cell column={c} row={row} field={meta.fieldByKey?.[c.key]}
+                      tempPrefix={meta.nik_temp_prefix} />
                   </TableCell>
                 ))}
                 <TableCell className="text-right">

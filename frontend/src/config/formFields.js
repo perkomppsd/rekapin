@@ -40,6 +40,21 @@ export const VISIBLE_WHEN = {
     form.status_tanda_tangan === "Mengundurkan Setelah TTD",
 };
 
+// Tombol bantu di sebelah input tertentu.
+//   label   : teks tombol
+//   fetch   : endpoint yang dipanggil untuk mengisi nilai
+//   pick    : ambil nilai dari response
+//   hideIf  : sembunyikan tombol kalau kondisi ini benar
+export const FIELD_ACTIONS = {
+  nik: {
+    label: "Belum ada NIK",
+    title: "Isi NIK sementara yang dijamin unik — ganti kalau KTP sudah ada",
+    fetch: "/candidates/nik-sementara",
+    pick: (data) => data.nik,
+    hideIf: (value) => Boolean(value),
+  },
+};
+
 // Peringatan yang muncul di dalam grup tertentu.
 export const GROUP_WARNINGS = {
   ttd: (form) =>

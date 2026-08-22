@@ -14,7 +14,8 @@ from ..db import db
 from ..models import BulkImportRequest, Candidate, CandidateCreate, CandidateUpdate
 from ..security import get_current_user
 from ..services import excel, history, listing, nik as nik_service, scope
-from ..services.candidates import prepare_new, split_by_nik
+from ..services.candidates import (fill_missing_nik, from_import_row, prepare_new,
+                                  split_by_nik)
 from ..services.common import now_iso
 from ..services.notifications import on_candidate_change
 from ..services.rules import apply_auto_rules
@@ -103,21 +104,40 @@ async def create_candidate(payload: CandidateCreate, bg: BackgroundTasks,
     return {k: v for k, v in doc.items() if k != "_id"}
 
 
+@router.get("/nik-sementara")
+async def temporary_nik(user: dict = Depends(get_current_user)):
+    """NIK sementara yang belum dipakai — untuk kandidat yang KTP-nya belum ada."""
+    return {"nik": await nik_service.generate_temporary()}
+
+
 async def _insert_import(rows: List[dict], user: dict, action: str, label: str) -> dict:
-    """Simpan hasil import: baris dengan NIK bermasalah dilewati & dilaporkan."""
+    """Simpan hasil import: baris bermasalah dilewati & dilaporkan, sisanya masuk."""
+    auto_nik = await fill_missing_nik(rows)
     usable, skipped = await split_by_nik(rows)
     stamp = now_iso()
     docs = [prepare_new(row, user, stamp) for row in usable]
     if docs:
         await db.candidates.insert_many(docs)
         await history.log_many(docs, action, label, user, stamp)
-    return {"inserted": len(docs), "skipped": len(skipped), "duplicates": skipped}
+    return {"inserted": len(docs), "skipped": len(skipped),
+            "duplicates": skipped, "auto_nik": auto_nik}
 
 
 @router.post("/bulk")
 async def bulk_create(payload: BulkImportRequest, user: dict = Depends(get_current_user)):
-    rows = [item.model_dump() for item in payload.items]
-    return await _insert_import(rows, user, "imported", "Import Massal")
+    # Validasi per baris: baris yang tidak lolos dilewati, bukan menggagalkan semua.
+    rows, invalid = [], []
+    for raw in payload.items:
+        doc = from_import_row(raw)
+        if doc is None:
+            invalid.append({"nama": str(raw.get("nama") or ""), "nik": str(raw.get("nik") or ""),
+                            "alasan": "Data baris tidak valid (nama wajib diisi)"})
+        else:
+            rows.append(doc)
+    result = await _insert_import(rows, user, "imported", "Import Massal")
+    result["duplicates"] = invalid + result["duplicates"]
+    result["skipped"] += len(invalid)
+    return result
 
 
 @router.post("/upload")
