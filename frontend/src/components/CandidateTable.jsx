@@ -12,7 +12,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, Ban, History, Mail } from "lucide-react";
+import {
+  MoreHorizontal, Pencil, Trash2, Ban, History, Mail, ArrowUp, ArrowDown, ArrowUpDown,
+} from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { useMeta } from "@/context/MetaContext";
 import { columnsFor } from "@/config/tableViews";
@@ -35,6 +37,33 @@ function NikCell({ value, tempPrefix }) {
         sementara
       </span>
     </span>
+  );
+}
+
+// Judul kolom yang bisa diklik untuk mengurutkan.
+// Klik pertama = tertinggi/terbaru dulu, klik lagi = dibalik.
+function SortableHead({ column, label, sort, onSort }) {
+  if (!column.sort || !onSort) {
+    return <TableHead className={`${T.th} h-11`}>{label}</TableHead>;
+  }
+  const aktif = sort?.key === column.sort;
+  const Icon = !aktif ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <TableHead className={`${T.th} h-11 p-0`}>
+      <button
+        type="button"
+        onClick={() => onSort(column.sort)}
+        data-testid={`sort-${column.sort}`}
+        title={aktif
+          ? `Diurutkan ${sort.order === "asc" ? "naik" : "turun"} — klik untuk membalik`
+          : "Klik untuk mengurutkan"}
+        className={`w-full h-11 px-4 flex items-center gap-1.5 transition-colors
+          ${aktif ? "text-indigo-300" : "text-slate-400 hover:text-slate-200"}`}
+      >
+        {label}
+        <Icon className={`w-3 h-3 ${aktif ? "" : "opacity-40"}`} />
+      </button>
+    </TableHead>
   );
 }
 
@@ -156,6 +185,7 @@ function RowActions({ row, onEdit, onDelete, onBlacklist, onShowHistory, onSendE
 
 export default function CandidateTable({
   rows, onEdit, onDelete, onBlacklist, onShowHistory, onSendEmail, view = "master",
+  sort, onSort,
 }) {
   const meta = useMeta();
 
@@ -179,9 +209,8 @@ export default function CandidateTable({
           <TableHeader className="bg-slate-900/70 sticky top-0">
             <TableRow className="border-slate-800 hover:bg-transparent">
               {columns.map((c) => (
-                <TableHead key={c.key} className={`${T.th} h-11`}>
-                  {c.label || meta.labelOf(c.key)}
-                </TableHead>
+                <SortableHead key={c.key} column={c} sort={sort} onSort={onSort}
+                  label={c.label || meta.labelOf(c.key)} />
               ))}
               <TableHead className={`${T.th} h-11`} />
             </TableRow>

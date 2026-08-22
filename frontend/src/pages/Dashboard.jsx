@@ -38,6 +38,7 @@ import Pagination from "@/components/Pagination";
 import { T, tone } from "@/config/theme";
 
 const PER_PAGE = 50;
+const DEFAULT_SORT = { key: "created_at", order: "desc" };
 const SEARCH_DEBOUNCE_MS = 350;
 
 // Laporkan hasil import: berapa masuk, berapa dilewati (NIK dobel / tidak valid).
@@ -97,6 +98,7 @@ export default function Dashboard() {
   const [rows, setRows] = useState([]);
   const [pageInfo, setPageInfo] = useState({ total: 0, page: 1, pages: 1, per_page: PER_PAGE });
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState(DEFAULT_SORT);
   const [stats, setStats] = useState({});
   const [positions, setPositions] = useState([]);
   const [customFields, setCustomFields] = useState([]);
@@ -134,13 +136,23 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [qLive]);
 
-  // Kembali ke halaman 1 setiap filter berubah.
-  useEffect(() => { setPage(1); }, [tab, q, posFilter, dateFrom, dateTo]);
+  // Kembali ke halaman 1 setiap filter atau urutan berubah.
+  useEffect(() => { setPage(1); }, [tab, q, posFilter, dateFrom, dateTo, sort]);
+
+  // Klik judul kolom: kolom baru -> mulai dari turun; kolom sama -> balik arah.
+  const handleSort = (key) => {
+    setSort((s) => (s.key === key
+      ? { key, order: s.order === "desc" ? "asc" : "desc" }
+      : { key, order: "desc" }));
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const listParams = { ...filterParams, page, per_page: PER_PAGE };
+      const listParams = {
+        ...filterParams, page, per_page: PER_PAGE,
+        sort: sort.key, order: sort.order,
+      };
       const [list, st, fn, pos, cf] = await Promise.all([
         api.get("/candidates", { params: listParams }),
         api.get("/candidates/stats"),
@@ -160,7 +172,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filterParams, page]);
+  }, [filterParams, page, sort]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -420,6 +432,8 @@ export default function Dashboard() {
                     onBlacklist={handleBlacklist}
                     onShowHistory={handleShowHistory}
                     onSendEmail={handleSendEmail}
+                    sort={sort}
+                    onSort={handleSort}
                   />
                 )}
                 {!loading && (

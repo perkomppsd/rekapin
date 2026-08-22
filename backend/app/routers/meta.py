@@ -71,6 +71,8 @@ async def build_meta() -> dict:
         ],
         "system_fields": [{"key": k, "label": label} for k, label in schema.SYSTEM_FIELDS],
         "searchable_fields": schema.SEARCHABLE_FIELDS,
+        "sorts": [{"key": s.key, "label": s.label} for s in schema.SORTS.values()],
+        "default_sort": schema.DEFAULT_SORT,
         "nik_temp_prefix": nik_service.TEMP_PREFIX,
     }
 

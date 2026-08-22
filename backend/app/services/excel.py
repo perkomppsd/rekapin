@@ -13,6 +13,7 @@ from openpyxl import Workbook, load_workbook
 
 from ..schema import EXPORT_COLUMNS, IMPORT_HEADER_MAP, IMPORT_POSITIONAL, TAB_BY_KEY
 from .candidates import coerce_value, from_import_row
+from ..schema import rating_average
 from .common import age_from
 
 # Kolom hasil hitungan (tidak disimpan di database): (key, judul, cara hitung)
@@ -20,6 +21,7 @@ COMPUTED_COLUMNS = (
     # Umur dihitung dari tanggal lahir. Kalau kandidat lama belum punya tanggal
     # lahir, pakai nilai "usia" yang tersimpan sebelum kolom ini ada.
     ("usia", "USIA", lambda d: age_from(d.get("tanggal_lahir")) or d.get("usia") or ""),
+    ("nilai_rata", "NILAI RATA-RATA", lambda d: rating_average(d) or ""),
 )
 
 

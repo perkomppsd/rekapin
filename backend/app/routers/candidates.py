@@ -43,16 +43,22 @@ async def list_candidates(
     date_to: Optional[str] = None,
     page: int = 1,
     per_page: int = config.DEFAULT_PAGE_SIZE,
+    sort: str = schema.DEFAULT_SORT,
+    order: str = "desc",
 ):
-    """Daftar kandidat berpaginasi. Semua penyaringan dilakukan database."""
+    """Daftar kandidat berpaginasi. Penyaringan & pengurutan dilakukan database."""
     query = listing.build_query(user, scope=scope_, q=q, position=position,
                                 date_from=date_from, date_to=date_to)
     page, per_page, skip = listing.paginate(page, per_page)
+    sort_field, sort_dir = schema.sort_tuple(sort, order)
     total = await db.candidates.count_documents(query)
     items = await db.candidates.find(query, {"_id": 0}).sort(
-        "created_at", -1
+        # Urutan kedua menjaga hasil tetap stabil kalau nilainya sama.
+        [(sort_field, sort_dir), ("created_at", -1)]
     ).skip(skip).limit(per_page).to_list(per_page)
-    return {"items": items, **listing.page_meta(total, page, per_page)}
+    return {"items": items, "sort": schema.resolve_sort(sort),
+            "order": "asc" if str(order).lower() == "asc" else "desc",
+            **listing.page_meta(total, page, per_page)}
 
 
 @router.get("/positions")

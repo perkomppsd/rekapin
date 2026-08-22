@@ -18,6 +18,7 @@ INDEXES = (
     ("users", "email", True),
     ("candidates", "nama", False),
     ("candidates", "created_at", False),
+    ("candidates", "nilai_rata", False),
     ("candidates", "apply", False),
     ("candidates", "status_interview", False),
     ("candidates", "status_training", False),

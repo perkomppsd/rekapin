@@ -50,6 +50,7 @@ class FieldSpec:
     aliases: Tuple[str, ...] = ()              # header alternatif saat import Excel
     paste_index: Optional[int] = None          # urutan kolom untuk import tanpa header
     searchable: bool = False                   # ikut dicari oleh kotak pencarian
+    sortable: bool = False                     # kolomnya bisa diurutkan
     unique: bool = False                       # tidak boleh ada dua kandidat dengan nilai sama
     sensitive: bool = False                    # data pribadi sensitif (jangan masuk email)
 
@@ -174,6 +175,7 @@ INTERVIEW_INVITE_STATUSES = (Interview.SCHEDULED, Interview.CALLED)
 FIELDS: Tuple[FieldSpec, ...] = (
     # --- Data pribadi ---
     FieldSpec("nama", "Nama", group="pribadi", required=True, searchable=True,
+              sortable=True,
               aliases=("name",), paste_index=0),
     # NIK = kunci identitas kandidat. Unik, jadi orang yang sama tidak bisa
     # masuk dua kali dan riwayat blacklist-nya ikut terbawa saat melamar lagi.
@@ -193,10 +195,12 @@ FIELDS: Tuple[FieldSpec, ...] = (
     # Tanggal lahir menggantikan kolom "usia": umur dihitung otomatis supaya
     # tidak pernah basi. Bisa terisi sendiri dari NIK (digit 7-12 = DDMMYY).
     FieldSpec("tanggal_lahir", "Tanggal Lahir", type="date", group="pribadi",
+              sortable=True,
               hint="Umur dihitung otomatis. Terisi sendiri dari NIK kalau kosong",
               aliases=("tgl lahir", "birth date", "dob", "tanggal_lahir"),
               paste_index=3),
     FieldSpec("apply", "Apply", type="select", group="pribadi", searchable=True,
+              sortable=True,
               options_ref="jobdesk", placeholder="Posisi yang dilamar",
               aliases=("posisi apply", "posisi"), paste_index=4),
 
@@ -206,14 +210,16 @@ FIELDS: Tuple[FieldSpec, ...] = (
     FieldSpec("posisi_penempatan", "Posisi Penempatan", type="select",
               group="penempatan", options_ref="jobdesk"),
     FieldSpec("penempatan_fix", "Penempatan Fix", type="select", group="penempatan",
-              options_ref="unit_usaha", placeholder="Unit usaha / cabang"),
+              options_ref="unit_usaha", sortable=True,
+              placeholder="Unit usaha / cabang"),
     FieldSpec("posisi_fix", "Posisi Fix", type="select", group="penempatan",
               options_ref="jobdesk"),
 
     # --- Interview ---
     FieldSpec("status_interview", "Status Interview", type="select", group="interview",
               options="interview", default=Interview.NOT_CALLED),
-    FieldSpec("tanggal_interview", "Tanggal Interview", type="date", group="interview"),
+    FieldSpec("tanggal_interview", "Tanggal Interview", type="date", group="interview",
+              sortable=True),
     FieldSpec("jam_interview", "Jam Interview", type="time", group="interview"),
     FieldSpec("metode_interview", "Metode Interview", type="select", group="interview",
               options="metode"),
@@ -234,6 +240,7 @@ FIELDS: Tuple[FieldSpec, ...] = (
               hint="Terisi otomatis saat status jadi Sudah",
               aliases=("tanggal kontrak", "tgl ttd kontrak")),
     FieldSpec("tanggal_habis_kontrak", "Tanggal Habis Kontrak", type="date", group="kontrak",
+              sortable=True,
               hint="Terisi otomatis 6 bulan setelah TTD kontrak; dipakai reminder",
               aliases=("habis kontrak", "kontrak berakhir")),
 
@@ -241,7 +248,7 @@ FIELDS: Tuple[FieldSpec, ...] = (
     FieldSpec("status_training", "Status Training", type="select", group="training",
               options="training", default=Training.NOT_YET),
     FieldSpec("tanggal_mulai_training", "Tanggal Mulai Training", type="date",
-              group="training", hint="Terisi otomatis saat status jadi Training",
+              group="training", sortable=True, hint="Terisi otomatis saat status jadi Training",
               export_label="MULAI TRAINING"),
 
     # --- Blacklist ---
@@ -269,6 +276,20 @@ FIELDS: Tuple[FieldSpec, ...] = (
 )
 
 FIELD_BY_KEY: Dict[str, FieldSpec] = {f.key: f for f in FIELDS}
+
+# Field penilaian bintang (dipakai menghitung rata-rata).
+RATING_FIELDS: Tuple[str, ...] = tuple(f.key for f in FIELDS if f.type == "rating")
+
+# Rata-rata nilai DISIMPAN di field ini (bukan cuma dihitung saat tampil) supaya
+# bisa diurutkan & di-index oleh database. Diisi otomatis oleh auto rules.
+RATING_AVG_FIELD = "nilai_rata"
+
+
+def rating_average(doc: dict) -> float:
+    """Rata-rata nilai bintang. Nilai 0 = belum dinilai, tidak ikut dihitung."""
+    nilai = [n for n in (doc.get(k) for k in RATING_FIELDS)
+             if isinstance(n, (int, float)) and n]
+    return round(sum(nilai) / len(nilai), 2) if nilai else 0.0
 
 # Grup form beserta judulnya (urutan = urutan section di form frontend).
 FIELD_GROUPS: Tuple[Tuple[str, str], ...] = (
@@ -438,6 +459,49 @@ FUNNEL: Tuple[Tuple[str, str, Optional[Callable[[dict], bool]], Optional[dict]],
     ("placement", "Placement", is_placed, Q_PLACED),
     ("kontrak", "TTD Kontrak", has_contract, Q_HAS_CONTRACT),
 )
+
+
+# ---------------------------------------------------------------------------
+# Pengurutan tabel
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class SortSpec:
+    key: str                      # nilai ?sort= dari frontend
+    label: str
+    field: str                    # field yang benar-benar diurutkan di database
+    invert: bool = False          # True kalau urutan field berlawanan dg maksud user
+
+
+def _build_sorts() -> Dict[str, SortSpec]:
+    sorts = {
+        "created_at": SortSpec("created_at", "Tanggal Input", "created_at"),
+        # Rata-rata nilai: field tersimpan, jadi bisa diurutkan langsung.
+        "nilai": SortSpec("nilai", "Nilai", RATING_AVG_FIELD),
+        # Umur: makin tua = tanggal lahir makin lampau, jadi arahnya dibalik.
+        "usia": SortSpec("usia", "Usia", "tanggal_lahir", invert=True),
+    }
+    for f in FIELDS:
+        if f.sortable:
+            sorts.setdefault(f.key, SortSpec(f.key, f.label, f.key))
+    return sorts
+
+
+SORTS: Dict[str, SortSpec] = _build_sorts()
+DEFAULT_SORT = "created_at"
+
+
+def resolve_sort(key: str) -> str:
+    """Key sort yang benar-benar dipakai (key tak dikenal -> default)."""
+    return key if key in SORTS else DEFAULT_SORT
+
+
+def sort_tuple(key: str, order: str = "desc") -> Tuple[str, int]:
+    """(field, arah) untuk MongoDB. Key tak dikenal -> urutan default."""
+    spec = SORTS[resolve_sort(key)]
+    arah = 1 if str(order).lower() == "asc" else -1
+    if spec.invert:
+        arah = -arah
+    return spec.field, arah
 
 
 def filter_by_scope(items: List[dict], scope: str) -> List[dict]:

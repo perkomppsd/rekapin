@@ -10,7 +10,8 @@ Cara menambah normalisasi nilai: tambah entri di `NORMALIZERS`.
 from dataclasses import dataclass
 from typing import Callable, Dict, Tuple
 
-from ..schema import Blacklist, Kontrak, Training, Ttd
+from ..schema import (Blacklist, Kontrak, RATING_AVG_FIELD, RATING_FIELDS,
+                      Training, Ttd, rating_average)
 from .. import config
 from .common import add_days, birthdate_from_nik, today_str
 
@@ -37,6 +38,12 @@ class Rule:
     name: str
     when: Callable[[dict, dict], bool]
     then: Callable[[dict, dict], Dict[str, object]]
+
+
+def _hitung_rata_nilai(before: dict, incoming: dict) -> Dict[str, object]:
+    """Rata-rata nilai dari gabungan data lama + perubahan."""
+    gabungan = {k: value_of(before, incoming, k, 0) for k in RATING_FIELDS}
+    return {RATING_AVG_FIELD: rating_average(gabungan)}
 
 
 RULES: Tuple[Rule, ...] = (
@@ -72,6 +79,12 @@ RULES: Tuple[Rule, ...] = (
                 add_days(value_of(b, i, "tanggal_ttd_kontrak"), config.CONTRACT_PERIOD_DAYS)}
             if still_empty(b, i, "tanggal_habis_kontrak") else {}
         ),
+    ),
+    Rule(
+        name="Simpan rata-rata nilai supaya bisa diurutkan database",
+        # Selalu dihitung ulang: murah, dan menjamin nilainya tidak pernah basi.
+        when=lambda b, i: True,
+        then=_hitung_rata_nilai,
     ),
     Rule(
         name="Mengundurkan setelah kontrak -> masuk blacklist",

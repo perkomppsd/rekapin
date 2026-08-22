@@ -271,6 +271,38 @@ Di sisi server, `services/candidates.py -> fill_pic_email()` melengkapi
 
 ---
 
+## Resep 2d — Membuat kolom bisa diurutkan
+
+Set `sortable=True` pada `FieldSpec`, lalu tambahkan `sort: "<key>"` pada kolom
+di `frontend/src/config/tableViews.js`. Judul kolomnya otomatis jadi tombol.
+
+```python
+FieldSpec("penempatan_fix", ..., sortable=True),
+```
+```js
+{ key: "penempatan_fix", label: "Penempatan", sort: "penempatan_fix" },
+```
+
+Pengurutan dikerjakan **database** (bukan browser), jadi yang diurutkan adalah
+seluruh data, bukan cuma halaman yang tampil.
+
+### Mengurutkan kolom hasil hitungan
+
+Nilai rata-rata tidak bisa diurutkan begitu saja karena bukan field tersimpan.
+Solusinya: simpan hasil hitungannya lewat auto rule, lalu daftarkan di `SORTS`.
+
+- `rating_average()` + `RATING_AVG_FIELD` di `app/schema.py`
+- auto rule "Simpan rata-rata nilai..." di `app/services/rules.py` — dihitung
+  ulang setiap simpan, jadi tidak pernah basi
+- entri `"nilai"` di `SORTS`, plus index di `app/db.py`
+- data lama: `.venv/bin/python scripts/isi_nilai_rata.py`
+
+Kalau arah pengurutan berlawanan dengan maksud user, pakai `invert=True`.
+Contoh: **usia** diurutkan lewat `tanggal_lahir` — umur terbesar berarti tanggal
+paling lampau, jadi arahnya dibalik supaya "tertua dulu" benar.
+
+---
+
 ## Resep 3 — Menambah tab baru di dashboard
 
 Contoh: tab "Cadangan".

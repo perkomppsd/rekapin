@@ -134,3 +134,15 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - services/candidates.py -> fill_pic_email(): baris import yang hanya berisi nama PIC dilengkapi emailnya dari akun user yang cocok (dilaporkan sebagai auto_pic)
 - Diuji: import "pic: Rina Recruiter" tanpa email -> pic_email terisi -> Rina langsung melihat kandidatnya
 - Unit test: 132 -> 133 (dua test lama yang tercakup test baru dihapus)
+
+### v13 (pengurutan kolom)
+- Mekanisme sort generik: FieldSpec.sortable + SORTS/SortSpec di schema.py; endpoint `GET /candidates?sort=&order=`
+- Judul kolom di tabel jadi tombol (klik = turun, klik lagi = naik), dengan indikator arah
+- Sort dikerjakan database, jadi mengurutkan seluruh data bukan hanya halaman yang tampil
+- Kolom Nilai: rata-rata sekarang DISIMPAN di field `nilai_rata` (auto rule, dihitung ulang tiap simpan) supaya bisa diurutkan & di-index; nilai 0 dipakai untuk "belum dinilai" agar urutan konsisten
+- Sort `usia` memakai `tanggal_lahir` dengan `invert=True` (umur terbesar = tanggal paling lampau)
+- Sort key tak dikenal jatuh ke default (created_at desc), tidak error; respons mengembalikan sort yang benar-benar dipakai
+- Urutan kedua selalu created_at desc supaya hasil stabil saat nilainya sama
+- Export dapat kolom NILAI RATA-RATA
+- Script scripts/isi_nilai_rata.py untuk data lama (7 kandidat diperbarui)
+- Unit test: 133 -> 141

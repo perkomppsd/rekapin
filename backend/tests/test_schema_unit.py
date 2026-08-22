@@ -689,3 +689,62 @@ def test_field_hanya_punya_satu_sumber_pilihan():
         assert sum(sumber) <= 1, f"{f.key} punya lebih dari satu sumber pilihan"
         if f.type == "select":
             assert any(sumber), f"{f.key} dropdown tapi tanpa sumber pilihan"
+
+
+# ---------------------------------------------------------------------------
+# Pengurutan (sort)
+# ---------------------------------------------------------------------------
+def test_rata_rata_nilai_hanya_menghitung_yang_sudah_dinilai():
+    assert schema.rating_average({"nilai_wajah": 4, "nilai_komunikasi": 3,
+                                  "nilai_kedisiplinan": 0}) == 3.5
+    assert schema.rating_average({"nilai_wajah": 5, "nilai_komunikasi": 5,
+                                  "nilai_kedisiplinan": 5}) == 5.0
+    assert schema.rating_average({}) == 0.0
+    assert schema.rating_average({"nilai_wajah": 0}) == 0.0
+
+
+def test_rata_rata_nilai_disimpan_setiap_update():
+    out = apply_auto_rules({}, {"nilai_wajah": 4, "nilai_komunikasi": 3,
+                                "nilai_kedisiplinan": 0})
+    assert out[schema.RATING_AVG_FIELD] == 3.5
+    # Update sebagian tetap memakai nilai lama yang tidak diubah.
+    out = apply_auto_rules(
+        {"nilai_wajah": 5, "nilai_komunikasi": 5, "nilai_kedisiplinan": 5},
+        {"nilai_wajah": 1})
+    assert out[schema.RATING_AVG_FIELD] == round((1 + 5 + 5) / 3, 2)
+
+
+def test_kandidat_tanpa_nilai_dapat_nol_bukan_kosong():
+    # Kalau None, MongoDB akan mengurutkannya tidak konsisten.
+    out = apply_auto_rules({}, {"nama": "Tanpa Nilai"})
+    assert out[schema.RATING_AVG_FIELD] == 0.0
+
+
+def test_sort_nilai_memakai_field_tersimpan():
+    assert schema.sort_tuple("nilai", "desc") == (schema.RATING_AVG_FIELD, -1)
+    assert schema.sort_tuple("nilai", "asc") == (schema.RATING_AVG_FIELD, 1)
+
+
+def test_sort_usia_arahnya_dibalik():
+    """Umur terbesar = tanggal lahir paling lampau, jadi arah database dibalik."""
+    assert schema.sort_tuple("usia", "desc") == ("tanggal_lahir", 1)
+    assert schema.sort_tuple("usia", "asc") == ("tanggal_lahir", -1)
+
+
+def test_sort_tak_dikenal_jatuh_ke_default():
+    assert schema.resolve_sort("nilai") == "nilai"
+    assert schema.resolve_sort("tidak-ada") == schema.DEFAULT_SORT
+    assert schema.sort_tuple("tidak-ada", "desc") == (schema.DEFAULT_SORT, -1)
+
+
+def test_field_bertanda_sortable_masuk_daftar_sort():
+    for f in schema.FIELDS:
+        if f.sortable:
+            assert f.key in schema.SORTS, f"{f.key} sortable tapi tidak ada di SORTS"
+
+
+def test_semua_sort_menunjuk_field_yang_ada():
+    boleh = set(schema.FIELD_BY_KEY) | {schema.RATING_AVG_FIELD} | \
+            {k for k, _ in schema.SYSTEM_FIELDS}
+    for spec in schema.SORTS.values():
+        assert spec.field in boleh, f"sort '{spec.key}' menunjuk field '{spec.field}'"
