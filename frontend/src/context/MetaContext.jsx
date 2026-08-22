@@ -21,6 +21,7 @@ const EMPTY = {
   system_fields: [],
   searchable_fields: [],
   nik_temp_prefix: "",
+  reference_lists: [],
 };
 
 // Fallback label kalau meta belum termuat: "tanggal_mulai_training" -> "Tanggal Mulai Training"

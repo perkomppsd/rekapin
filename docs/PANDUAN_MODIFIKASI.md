@@ -196,6 +196,52 @@ terdeteksi.
 
 ---
 
+## Resep 2c — Menambah daftar pilihan yang dikelola admin
+
+Bedanya dengan `STATUS_SETS`: isinya **diubah admin dari halaman Setting**,
+tanpa ubah kode. Yang sudah ada: **Unit Usaha** dan **Jobdesk**.
+
+Menambah daftar baru, contoh "Sumber Lamaran":
+
+1. `backend/app/schema.py` — tambah entri di `REFERENCE_LISTS`:
+
+   ```python
+   "sumber_lamaran": ReferenceList(
+       key="sumber_lamaran",
+       label="Sumber Lamaran",
+       singular="Sumber lamaran",
+       description="Dari mana kandidat mengetahui lowongan.",
+       fields=("sumber_lamaran",),      # field kandidat yang memakainya
+       note_label="Catatan",
+   ),
+   ```
+
+2. Tunjuk daftar itu dari `FieldSpec`:
+
+   ```python
+   FieldSpec("sumber_lamaran", "Sumber Lamaran", type="select",
+             group="pribadi", options_ref="sumber_lamaran"),
+   ```
+
+Selesai. Yang otomatis ikut: endpoint CRUD `/api/references/sumber_lamaran`,
+kartu pengelola di halaman Setting, dan dropdown di form kandidat.
+
+Perilaku yang sudah diatur:
+
+- **Ganti nama item** -> nilai di data kandidat ikut diperbarui, jadi tidak ada
+  nilai yatim.
+- **Hapus item** -> hilang dari dropdown, tapi data kandidat **tidak diubah**
+  (itu catatan historis). Di form, nilai lama tetap tampil dengan penanda
+  "(tidak ada di daftar)" supaya tidak diam-diam terhapus saat disimpan.
+- Setiap item menampilkan **berapa data kandidat yang memakainya**, dan
+  konfirmasi hapus memperingatkan kalau masih terpakai.
+- Nama item tidak boleh dobel dalam satu daftar (`409`).
+
+Nilai teks bebas yang sudah ada sebelum daftar dibuat bisa diserap sekali jalan:
+`cd backend && .venv/bin/python scripts/isi_daftar_referensi.py --tulis`
+
+---
+
 ## Resep 3 — Menambah tab baru di dashboard
 
 Contoh: tab "Cadangan".

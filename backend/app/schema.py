@@ -37,7 +37,8 @@ class FieldSpec:
     type: str = "text"                        # lihat daftar tipe di atas
     group: str = "lain"                        # grup form di frontend
     default: Any = ""                          # nilai default saat kandidat dibuat
-    options: Optional[str] = None              # nama set pilihan di STATUS_SETS
+    options: Optional[str] = None              # nama set pilihan tetap di STATUS_SETS
+    options_ref: Optional[str] = None          # nama daftar referensi (dikelola admin)
     required: bool = False
     placeholder: str = ""
     hint: str = ""                             # teks bantuan di form
@@ -117,6 +118,51 @@ STATUS_SETS: Dict[str, List[str]] = {
     "role": ["admin", "recruiter"],
 }
 
+# ---------------------------------------------------------------------------
+# Daftar referensi — isinya DIKELOLA ADMIN dari halaman Setting, bukan hardcode.
+#
+# Menambah daftar baru:
+#   1. Tambah satu entri di REFERENCE_LISTS.
+#   2. Tunjuk daftar itu dari FieldSpec lewat `options_ref="nama_daftar"`.
+# Endpoint CRUD, dropdown di form, dan halaman Setting ikut otomatis.
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class ReferenceList:
+    key: str
+    label: str                       # judul di halaman Setting
+    singular: str                    # kata tunggal untuk pesan ("Unit usaha")
+    description: str
+    fields: Tuple[str, ...]          # field kandidat yang memakai daftar ini
+    note_label: str = "Keterangan"   # judul kolom keterangan pada item
+
+
+REFERENCE_LISTS: Dict[str, "ReferenceList"] = {
+    "unit_usaha": ReferenceList(
+        key="unit_usaha",
+        label="Unit Usaha",
+        singular="Unit usaha",
+        description="Daftar unit usaha / cabang tempat kandidat ditempatkan.",
+        fields=("rencana_penempatan", "penempatan_fix"),
+        note_label="Lokasi / Catatan",
+    ),
+    "jobdesk": ReferenceList(
+        key="jobdesk",
+        label="Jobdesk",
+        singular="Jobdesk",
+        description="Daftar posisi beserta uraian tugasnya.",
+        fields=("apply", "posisi_penempatan", "posisi_fix"),
+        note_label="Uraian Tugas",
+    ),
+}
+
+
+def reference_list_for(field_key: str) -> Optional[ReferenceList]:
+    for ref in REFERENCE_LISTS.values():
+        if field_key in ref.fields:
+            return ref
+    return None
+
+
 # Status interview yang memicu email undangan interview otomatis.
 INTERVIEW_INVITE_STATUSES = (Interview.SCHEDULED, Interview.CALLED)
 
@@ -149,17 +195,19 @@ FIELDS: Tuple[FieldSpec, ...] = (
               hint="Umur dihitung otomatis. Terisi sendiri dari NIK kalau kosong",
               aliases=("tgl lahir", "birth date", "dob", "tanggal_lahir"),
               paste_index=3),
-    FieldSpec("apply", "Apply", group="pribadi", searchable=True,
-              placeholder="Posisi yang dilamar",
+    FieldSpec("apply", "Apply", type="select", group="pribadi", searchable=True,
+              options_ref="jobdesk", placeholder="Posisi yang dilamar",
               aliases=("posisi apply", "posisi"), paste_index=4),
 
     # --- Penempatan ---
-    FieldSpec("rencana_penempatan", "Rencana Penempatan", group="penempatan",
-              paste_index=5),
-    FieldSpec("posisi_penempatan", "Posisi Penempatan", group="penempatan"),
-    FieldSpec("penempatan_fix", "Penempatan Fix", group="penempatan",
-              placeholder="Cabang / Lokasi"),
-    FieldSpec("posisi_fix", "Posisi Fix", group="penempatan"),
+    FieldSpec("rencana_penempatan", "Rencana Penempatan", type="select",
+              group="penempatan", options_ref="unit_usaha", paste_index=5),
+    FieldSpec("posisi_penempatan", "Posisi Penempatan", type="select",
+              group="penempatan", options_ref="jobdesk"),
+    FieldSpec("penempatan_fix", "Penempatan Fix", type="select", group="penempatan",
+              options_ref="unit_usaha", placeholder="Unit usaha / cabang"),
+    FieldSpec("posisi_fix", "Posisi Fix", type="select", group="penempatan",
+              options_ref="jobdesk"),
 
     # --- Interview ---
     FieldSpec("status_interview", "Status Interview", type="select", group="interview",

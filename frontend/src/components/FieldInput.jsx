@@ -27,6 +27,10 @@ const RENDERERS = {
   select: ({ field, value, onChange, testid }) => {
     // Field tanpa nilai default boleh dikosongkan lagi lewat pilihan "—".
     const clearable = !field.required && !field.default;
+    const options = field.options || [];
+    // Nilai lama yang sudah dihapus dari daftar tetap ditampilkan, supaya data
+    // kandidat tidak diam-diam berubah saat form dibuka lalu disimpan.
+    const orphan = value && !options.includes(value) ? value : null;
     return (
       <Select
         value={value || (clearable ? NONE : "")}
@@ -37,9 +41,17 @@ const RENDERERS = {
         </SelectTrigger>
         <SelectContent className={T.selectContent}>
           {clearable && <SelectItem value={NONE}>—</SelectItem>}
-          {(field.options || []).map((o) => (
+          {orphan && (
+            <SelectItem value={orphan}>{orphan} (tidak ada di daftar)</SelectItem>
+          )}
+          {options.map((o) => (
             <SelectItem key={o} value={o}>{o}</SelectItem>
           ))}
+          {!options.length && !orphan && (
+            <div className="px-2 py-3 text-xs text-slate-400">
+              Daftar masih kosong — isi dulu di halaman Setting.
+            </div>
+          )}
         </SelectContent>
       </Select>
     );

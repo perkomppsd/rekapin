@@ -112,3 +112,16 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Slot posisi import ke-4 dipakai ulang (usia -> tanggal lahir) supaya sheet paste tidak bergeser; alias: tanggal lahir, tgl lahir, dob, birth date
 - Script backfill scripts/isi_tanggal_lahir.py (dry run default, --tulis untuk simpan) -> 6 dari 7 kandidat contoh terisi dari NIK
 - Unit test: 105 -> 126
+
+### v11 (data master Unit Usaha & Jobdesk)
+- Mekanisme "daftar referensi" generik: schema.REFERENCE_LISTS + FieldSpec.options_ref
+- Dua daftar terpasang: Unit Usaha (rencana_penempatan, penempatan_fix) & Jobdesk (apply, posisi_penempatan, posisi_fix)
+- CRUD lengkap: GET/POST/PUT/DELETE /api/references/{list_key} (tulis = admin), item punya nama + keterangan (Jobdesk: uraian tugas)
+- Kolom penempatan & posisi kandidat berubah dari teks bebas jadi dropdown yang diisi dari daftar
+- Ganti nama item -> nilai di data kandidat ikut diperbarui otomatis (tidak ada nilai yatim)
+- Hapus item -> hilang dari dropdown tapi data kandidat tidak diubah; di form nilai lama tampil "(tidak ada di daftar)"
+- Tiap item menampilkan jumlah pemakaian; konfirmasi hapus memperingatkan kalau masih dipakai
+- Nama unik per daftar (index reference_list_nama_unique)
+- Halaman Setting jadi "Data Master": kartu pengelola per daftar (ReferenceListManager, generik) + kolom kustom
+- Script scripts/isi_daftar_referensi.py menyerap nilai teks bebas yang sudah ada (9 item terserap dari data contoh)
+- Unit test: 126 -> 132

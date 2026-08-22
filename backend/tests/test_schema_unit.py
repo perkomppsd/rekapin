@@ -42,8 +42,10 @@ def test_setiap_field_punya_grup_yang_terdaftar():
 
 
 def test_field_select_menunjuk_status_set_yang_ada():
+    """Dropdown berpilihan tetap harus menunjuk STATUS_SETS yang benar.
+    Dropdown yang isinya dikelola admin memakai options_ref, diuji terpisah."""
     for f in schema.FIELDS:
-        if f.type == "select":
+        if f.type == "select" and f.options:
             assert f.options in schema.STATUS_SETS, f.key
             assert schema.STATUS_SETS[f.options], f.key
 
@@ -627,3 +629,51 @@ def test_export_punya_kolom_usia_hasil_hitungan():
     # Data lama tanpa tanggal lahir tetap memakai nilai usia yang tersimpan.
     assert hitung({"usia": 24}) == 24
     assert hitung({}) == ""
+
+
+# ---------------------------------------------------------------------------
+# Daftar referensi (Unit Usaha & Jobdesk)
+# ---------------------------------------------------------------------------
+def test_daftar_referensi_terdaftar():
+    assert set(schema.REFERENCE_LISTS) == {"unit_usaha", "jobdesk"}
+    assert schema.REFERENCE_LISTS["unit_usaha"].label == "Unit Usaha"
+    assert schema.REFERENCE_LISTS["jobdesk"].label == "Jobdesk"
+
+
+def test_field_penempatan_dan_posisi_pakai_daftar_referensi():
+    harapan = {
+        "rencana_penempatan": "unit_usaha",
+        "penempatan_fix": "unit_usaha",
+        "apply": "jobdesk",
+        "posisi_penempatan": "jobdesk",
+        "posisi_fix": "jobdesk",
+    }
+    for key, ref in harapan.items():
+        spec = schema.FIELD_BY_KEY[key]
+        assert spec.type == "select", f"{key} harus dropdown"
+        assert spec.options_ref == ref, key
+
+
+def test_setiap_field_di_daftar_referensi_memang_ada():
+    for ref in schema.REFERENCE_LISTS.values():
+        for key in ref.fields:
+            assert key in schema.FIELD_BY_KEY, f"{ref.key} menunjuk field '{key}' yang tidak ada"
+            assert schema.FIELD_BY_KEY[key].options_ref == ref.key, key
+
+
+def test_field_tidak_boleh_punya_dua_sumber_pilihan():
+    for f in schema.FIELDS:
+        assert not (f.options and f.options_ref), (
+            f"{f.key} tidak boleh memakai STATUS_SETS dan daftar referensi sekaligus")
+
+
+def test_field_select_punya_salah_satu_sumber_pilihan():
+    for f in schema.FIELDS:
+        if f.type == "select":
+            assert f.options or f.options_ref, f"{f.key} dropdown tapi tanpa sumber pilihan"
+
+
+def test_reference_list_for():
+    assert schema.reference_list_for("penempatan_fix").key == "unit_usaha"
+    assert schema.reference_list_for("posisi_fix").key == "jobdesk"
+    assert schema.reference_list_for("nama") is None

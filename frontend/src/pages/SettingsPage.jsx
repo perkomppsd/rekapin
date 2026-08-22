@@ -1,6 +1,9 @@
-// Setting kolom kustom (admin).
-// Kolom kustom disimpan di database, jadi bisa ditambah tanpa ubah kode.
-// Untuk kolom tetap/permanen, tambahkan FieldSpec di backend/app/schema.py.
+// Halaman Setting (admin): data master aplikasi.
+//
+// 1. Daftar referensi (Unit Usaha, Jobdesk, ...) -> mengisi dropdown di form
+//    kandidat. Definisinya di backend/app/schema.py -> REFERENCE_LISTS,
+//    UI-nya digambar otomatis oleh ReferenceListManager.
+// 2. Kolom kustom -> menambah kolom baru tanpa ubah kode.
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +18,8 @@ import {
 import { toast } from "sonner";
 import { Plus, Trash2, Columns3 } from "lucide-react";
 import AdminPageShell from "@/components/AdminPageShell";
+import ReferenceListManager from "@/components/ReferenceListManager";
+import { useMeta } from "@/context/MetaContext";
 import { T } from "@/config/theme";
 
 // Tipe kolom kustom yang didukung backend (app/routers/custom_fields.py).
@@ -28,6 +33,7 @@ const EMPTY_FORM = { label: "", type: "text", options: "" };
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const meta = useMeta();
   const [fields, setFields] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -82,13 +88,26 @@ export default function SettingsPage() {
     }
   };
 
+  const referenceLists = meta.reference_lists || [];
+
   return (
     <AdminPageShell
-      title="Setting — Kolom Kustom"
-      badge="Kolom Kustom"
+      title="Setting — Data Master"
+      badge="Data Master"
       badgeIcon="Settings"
-      description="Tambahkan kolom sesuai kebutuhan tim (misal: Sumber Info, Referensi, Skala Gaji). Kolom akan otomatis muncul di form kandidat."
+      description="Kelola daftar pilihan yang muncul di form kandidat (Unit Usaha, Jobdesk) dan tambahkan kolom sesuai kebutuhan tim."
     >
+      {referenceLists.map((list) => (
+        <ReferenceListManager key={list.key} list={list} />
+      ))}
+
+      <div className="pt-2">
+        <div className="text-slate-100 font-medium">Kolom Kustom</div>
+        <div className={T.hint}>
+          Untuk kebutuhan yang belum ada kolomnya (misal: Sumber Info, Skala Gaji).
+          Kolom akan otomatis muncul di form kandidat.
+        </div>
+      </div>
       <form onSubmit={create} className={`${T.panel} p-6 space-y-4`}>
         <div className="flex items-center gap-2 text-slate-200 font-medium">
           <Plus className="w-4 h-4 text-indigo-400" /> Tambah Kolom Baru

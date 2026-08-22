@@ -26,6 +26,7 @@ INDEXES = (
     ("candidate_history", "candidate_id", False),
     ("candidate_history", "changed_at", False),
     ("custom_fields", "key", True),
+    ("reference_items", "list", False),
 )
 
 
@@ -36,6 +37,12 @@ async def ensure_indexes() -> None:
     # Field unik dari schema.py (mis. NIK). Pakai PARTIAL index supaya kandidat
     # yang field-nya masih kosong tidak saling bentrok — hanya nilai non-kosong
     # yang wajib unik.
+    # Nama item daftar referensi unik per daftar (Unit Usaha & Jobdesk boleh
+    # punya nama sama, tapi tidak boleh dobel di dalam daftar yang sama).
+    await db.reference_items.create_index(
+        [("list", 1), ("nama", 1)], unique=True, name="reference_list_nama_unique",
+    )
+
     for field in UNIQUE_FIELDS:
         await db.candidates.create_index(
             field,

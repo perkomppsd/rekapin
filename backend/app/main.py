@@ -13,7 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from . import config, db
 from .routers import (auth, candidates, cron, custom_fields, email, export,
-                      history, meta, users)
+                      history, meta, references, users)
 from .security import hash_password, verify_password
 from .services.common import now_iso
 
@@ -34,6 +34,7 @@ ROUTERS = (
     auth.router,
     users.router,
     custom_fields.router,
+    references.router,
     meta.router,
     export.router,
     history.router,

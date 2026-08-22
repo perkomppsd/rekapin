@@ -8,21 +8,23 @@ ikut berubah tanpa edit kode frontend.
 from fastapi import APIRouter, Depends
 
 from .. import schema
-from ..services import nik as nik_service
+from ..services import nik as nik_service, references
 from ..emailing import templates
 from ..security import get_current_user
 
 router = APIRouter(tags=["meta"])
 
 
-def _field_payload(f: schema.FieldSpec) -> dict:
+def _field_payload(f: schema.FieldSpec, ref_values: dict) -> dict:
     return {
         "key": f.key,
         "label": f.label,
         "type": f.type,
         "group": f.group,
         "default": f.default,
-        "options": list(schema.STATUS_SETS.get(f.options, [])) if f.options else None,
+        "options": (list(schema.STATUS_SETS.get(f.options, [])) if f.options
+                    else ref_values.get(f.options_ref) if f.options_ref else None),
+        "options_ref": f.options_ref,
         "required": f.required,
         "placeholder": f.placeholder,
         "hint": f.hint,
@@ -32,9 +34,17 @@ def _field_payload(f: schema.FieldSpec) -> dict:
     }
 
 
-def build_meta() -> dict:
+async def build_meta() -> dict:
+    # Pilihan untuk field ber-`options_ref` diambil dari daftar yang dikelola admin.
+    ref_values = await references.all_names()
     return {
-        "fields": [_field_payload(f) for f in schema.FIELDS],
+        "fields": [_field_payload(f, ref_values) for f in schema.FIELDS],
+        "reference_lists": [
+            {"key": r.key, "label": r.label, "singular": r.singular,
+             "description": r.description, "fields": list(r.fields),
+             "note_label": r.note_label}
+            for r in schema.REFERENCE_LISTS.values()
+        ],
         "groups": [{"key": k, "label": label} for k, label in schema.FIELD_GROUPS],
         "statuses": schema.STATUS_SETS,
         "tabs": [{"key": t.key, "label": t.label, "icon": t.icon, "tone": t.tone,
@@ -54,4 +64,4 @@ def build_meta() -> dict:
 
 @router.get("/meta")
 async def meta(user: dict = Depends(get_current_user)):
-    return build_meta()
+    return await build_meta()

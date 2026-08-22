@@ -101,6 +101,16 @@ class UserUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 # Kolom kustom (dibuat admin lewat halaman Setting)
 # ---------------------------------------------------------------------------
+class ReferenceItemCreate(BaseModel):
+    nama: str
+    keterangan: Optional[str] = ""
+
+
+class ReferenceItemUpdate(BaseModel):
+    nama: Optional[str] = None
+    keterangan: Optional[str] = None
+
+
 class CustomFieldCreate(BaseModel):
     label: str
     type: str = "text"  # text | number | select
