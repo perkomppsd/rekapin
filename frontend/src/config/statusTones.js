@@ -18,6 +18,10 @@ export const STATUS_TONES = {
     { when: (v) => v === "sudah", tone: "emerald" },
     { when: (v) => v.startsWith("mengundurkan"), tone: "rose" },
   ],
+  status_kontrak: [
+    { when: (v) => v === "sudah" || v === "diperpanjang", tone: "violet" },
+    { when: (v) => v.startsWith("mengundurkan") || v.includes("tidak dilanjutkan"), tone: "rose" },
+  ],
   status_blacklist: [
     { when: (v) => v.startsWith("ya"), tone: "rose" },
   ],

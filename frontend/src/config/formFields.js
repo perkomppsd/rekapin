@@ -30,6 +30,8 @@ export const FORM_LABEL_OVERRIDES = {
   nilai_kedisiplinan: "Kedisiplinan",
   pic_email: "Email PIC (untuk reminder)",
   tanggal_mulai_training: "Tanggal Mulai Training (auto)",
+  tanggal_ttd_kontrak: "Tanggal TTD Kontrak (auto)",
+  tanggal_habis_kontrak: "Tanggal Habis Kontrak (auto)",
   alasan_blacklist: "Alasan Blacklist / Catatan",
 };
 
@@ -37,7 +39,8 @@ export const FORM_LABEL_OVERRIDES = {
 export const VISIBLE_WHEN = {
   alasan_blacklist: (form) =>
     (form.status_blacklist || "").startsWith("Ya") ||
-    form.status_tanda_tangan === "Mengundurkan Setelah TTD",
+    form.status_tanda_tangan === "Mengundurkan Setelah TTD" ||
+    form.status_kontrak === "Mengundurkan Setelah Kontrak",
 };
 
 // Tombol bantu di sebelah input tertentu.
@@ -59,6 +62,10 @@ export const FIELD_ACTIONS = {
 export const GROUP_WARNINGS = {
   ttd: (form) =>
     form.status_tanda_tangan === "Mengundurkan Setelah TTD"
-      ? "Kandidat otomatis masuk **Blacklist** karena mengundurkan diri setelah TTD."
+      ? "Kandidat otomatis masuk **Blacklist** karena mengundurkan diri setelah TTD kesepakatan."
+      : null,
+  kontrak: (form) =>
+    form.status_kontrak === "Mengundurkan Setelah Kontrak"
+      ? "Kandidat otomatis masuk **Blacklist** karena mengundurkan diri setelah TTD kontrak."
       : null,
 };

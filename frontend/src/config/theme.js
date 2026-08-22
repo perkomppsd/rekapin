@@ -72,6 +72,11 @@ export const TONES = {
     pill: "bg-sky-500/10 text-sky-300 border-sky-500/20",
     button: "border-sky-500/40 bg-sky-500/10 text-sky-200 hover:bg-sky-500/20 hover:text-sky-50",
   },
+  violet: {
+    card: "text-violet-300 bg-violet-500/10 border-violet-500/20",
+    pill: "bg-violet-500/10 text-violet-300 border-violet-500/20",
+    button: "border-violet-500/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20 hover:text-violet-50",
+  },
   neutral: {
     card: "text-slate-300 bg-slate-800 border-slate-700",
     pill: "bg-slate-800 text-slate-300 border-slate-700",

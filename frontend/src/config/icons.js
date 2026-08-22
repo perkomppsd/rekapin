@@ -2,12 +2,12 @@
 // Tambah ikon baru: import di sini lalu daftarkan di ICONS.
 
 import {
-  Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download,
+  Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download, FileSignature,
   GraduationCap, MapPin, Plus, Settings, ShieldCheck, Sparkles, Upload, Users,
 } from "lucide-react";
 
 export const ICONS = {
-  Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download,
+  Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download, FileSignature,
   GraduationCap, MapPin, Plus, Settings, ShieldCheck, Sparkles, Upload, Users,
 };
 

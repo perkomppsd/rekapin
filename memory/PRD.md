@@ -90,3 +90,15 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - BulkImportRequest.items jadi List[dict] + validasi per baris -> satu baris rusak tidak lagi menggagalkan seluruh paste (422)
 - Script migrasi backend/scripts/isi_nik_sementara.py untuk data lama
 - Unit test: 84 -> 89
+
+### v9 (TTD Kontrak 6 bulan)
+- Istilah dibedakan: "TTD Kesepakatan" (awal) vs "TTD Kontrak" (bulan ke-6). Nama field internal tidak berubah (status_tanda_tangan), jadi tanpa migrasi data
+- Field baru: status_kontrak, tanggal_ttd_kontrak, tanggal_habis_kontrak (grup "TTD Kontrak (6 Bulan)")
+- Status kontrak: Belum / Sudah / Diperpanjang / Tidak Dilanjutkan / Mengundurkan Setelah Kontrak
+- Auto-rule: status "Sudah" -> tanggal TTD kontrak = hari ini; tanggal habis = TTD + CONTRACT_PERIOD_DAYS (180)
+- Auto-rule: "Mengundurkan Setelah Kontrak" -> blacklist "Ya - Mengundurkan Setelah Kontrak"
+- Tab + kartu statistik + scope export "kontrak"; funnel dapat tahap "TTD Kontrak" di akhir
+- reminders.py digeneralisasi jadi daftar ReminderRule: reminder training (H-90) & habis kontrak (tanggal habis), satu email dua bagian
+- Alias import lama ("Status TTD", "Tanggal TTD") tetap dikenali
+- FIX: /api/meta error 500 karena FUNNEL kini 4 elemen
+- Unit test: 89 -> 105

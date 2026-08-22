@@ -261,6 +261,29 @@ password atau data kartu. Jangan dilonggarkan.
 
 ---
 
+## Resep 4b — Menambah jenis reminder baru
+
+`backend/app/services/reminders.py`, tambah satu `ReminderRule`:
+
+```python
+ReminderRule(
+    key="masa_percobaan",
+    label="Masa Percobaan Berakhir",
+    date_field="tanggal_mulai_percobaan",
+    period_days=30,          # 0 kalau field-nya sudah berisi tanggal tenggat
+    only_if=lambda c: (c.get("status_training") or "") == "Percobaan",
+),
+```
+
+Reminder baru otomatis ikut di email yang sama (satu bagian per jenis per hari
+pengingat). Hari pengingat diatur di `config.REMINDER_DAYS` (default H-7 & hari-H).
+
+Yang sudah terpasang: akhir masa **training** (`TRAINING_PERIOD_DAYS`, 90 hari)
+dan **habis kontrak** (`tanggal_habis_kontrak`, dihitung dari
+`CONTRACT_PERIOD_DAYS`, 180 hari).
+
+---
+
 ## Resep 5 — Menambah aturan otomatis saat simpan
 
 `backend/app/services/rules.py`, tambah satu `Rule`:

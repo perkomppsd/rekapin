@@ -461,3 +461,85 @@ def test_baris_import_tanpa_nama_tetap_dibuang():
     from app.services.candidates import from_import_row
     assert from_import_row({"nik": "3201011234567890"}) is None
     assert from_import_row({"nama": "   "}) is None
+
+
+# ---------------------------------------------------------------------------
+# TTD Kontrak (6 bulan)
+# ---------------------------------------------------------------------------
+def test_field_kontrak_terdaftar():
+    for key in ("status_kontrak", "tanggal_ttd_kontrak", "tanggal_habis_kontrak"):
+        assert key in schema.FIELD_BY_KEY, key
+    assert schema.FIELD_BY_KEY["status_kontrak"].default == schema.Kontrak.PENDING
+    assert ("kontrak", "TTD Kontrak (6 Bulan)") in schema.FIELD_GROUPS
+
+
+def test_label_ttd_dibedakan_kesepakatan_vs_kontrak():
+    assert schema.FIELD_BY_KEY["status_tanda_tangan"].label == "Status TTD Kesepakatan"
+    assert schema.FIELD_BY_KEY["status_kontrak"].label == "Status TTD Kontrak"
+    labels = [lbl for _, lbl in schema.EXPORT_COLUMNS]
+    assert "STATUS TTD KESEPAKATAN" in labels and "STATUS TTD KONTRAK" in labels
+
+
+def test_alias_import_lama_tetap_dikenali():
+    # Sheet lama yang memakai header "Status TTD" harus tetap terbaca.
+    assert schema.IMPORT_HEADER_MAP["status ttd"] == "status_tanda_tangan"
+    assert schema.IMPORT_HEADER_MAP["tanggal ttd"] == "tanggal_tanda_tangan"
+    assert schema.IMPORT_HEADER_MAP["status kontrak"] == "status_kontrak"
+
+
+@pytest.mark.parametrize("status,expected", [
+    (schema.Kontrak.SIGNED, True),
+    (schema.Kontrak.EXTENDED, True),
+    (schema.Kontrak.PENDING, False),
+    (schema.Kontrak.NOT_CONTINUED, False),
+    ("sudah", True),          # tidak peduli huruf besar/kecil
+])
+def test_predikat_punya_kontrak(status, expected):
+    assert schema.has_contract({"status_kontrak": status}) is expected
+
+
+def test_ttd_kontrak_mengisi_tanggal_dan_masa_habis():
+    out = apply_auto_rules({}, {"status_kontrak": schema.Kontrak.SIGNED})
+    assert out["tanggal_ttd_kontrak"], "tanggal TTD kontrak harus terisi otomatis"
+    assert out["tanggal_habis_kontrak"], "tanggal habis kontrak harus dihitung"
+    from app.services.common import add_days
+    assert out["tanggal_habis_kontrak"] == add_days(
+        out["tanggal_ttd_kontrak"], app_config.CONTRACT_PERIOD_DAYS)
+
+
+def test_tanggal_kontrak_yang_sudah_diisi_tidak_ditimpa():
+    out = apply_auto_rules(
+        {"tanggal_ttd_kontrak": "2026-01-01", "tanggal_habis_kontrak": "2026-12-31"},
+        {"status_kontrak": schema.Kontrak.SIGNED})
+    assert "tanggal_ttd_kontrak" not in out
+    assert "tanggal_habis_kontrak" not in out
+
+
+def test_mengundurkan_setelah_kontrak_masuk_blacklist():
+    out = apply_auto_rules({}, {"status_kontrak": schema.Kontrak.RESIGNED_AFTER})
+    assert out["status_blacklist"] == schema.Blacklist.RESIGNED_AFTER_KONTRAK
+    assert "kontrak" in out["alasan_blacklist"].lower()
+
+
+def test_tab_dan_funnel_kontrak_ada():
+    assert "kontrak" in schema.TAB_BY_KEY
+    assert schema.TAB_BY_KEY["kontrak"].query
+    assert "kontrak" in [k for k, _l, _p, _q in schema.FUNNEL]
+
+
+def test_add_days():
+    from app.services.common import add_days
+    assert add_days("2026-08-22", 180) == "2027-02-18"
+    assert add_days("2026-01-01", 0) == "2026-01-01"
+    assert add_days("bukan tanggal", 10) == ""
+    assert add_days("", 10) == ""
+
+
+def test_aturan_reminder_mencakup_training_dan_kontrak():
+    from app.services.reminders import RULES
+    keys = {r.key for r in RULES}
+    assert keys == {"training", "kontrak"}
+    kontrak = next(r for r in RULES if r.key == "kontrak")
+    # tanggal_habis_kontrak sudah berupa tenggat, jadi tidak ditambah periode lagi
+    assert kontrak.period_days == 0
+    assert kontrak.date_field == "tanggal_habis_kontrak"

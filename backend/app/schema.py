@@ -74,6 +74,15 @@ class Ttd:
     RESIGNED_AFTER = "Mengundurkan Setelah TTD"
 
 
+class Kontrak:
+    """TTD kontrak kerja, ditandatangani setelah masa awal (default 6 bulan)."""
+    PENDING = "Belum"
+    SIGNED = "Sudah"
+    EXTENDED = "Diperpanjang"
+    NOT_CONTINUED = "Tidak Dilanjutkan"
+    RESIGNED_AFTER = "Mengundurkan Setelah Kontrak"
+
+
 class Training:
     NOT_YET = "Belum Training"
     ONGOING = "Training"
@@ -87,6 +96,7 @@ class Blacklist:
     YES_PREFIX = "Ya"                            # semua status blacklist diawali "Ya"
     RESIGNED = "Ya - Mengundurkan Diri"
     RESIGNED_AFTER_TTD = "Ya - Mengundurkan Setelah TTD"
+    RESIGNED_AFTER_KONTRAK = "Ya - Mengundurkan Setelah Kontrak"
     NO_SHOW = "Ya - Tidak Hadir"
     VIOLATION = "Ya - Pelanggaran"
     OTHER = "Ya - Lainnya"
@@ -97,10 +107,13 @@ STATUS_SETS: Dict[str, List[str]] = {
                   Interview.DONE, Interview.PASSED, Interview.FAILED],
     "metode": ["Online", "Offline", "Telepon"],
     "ttd": [Ttd.PENDING, Ttd.SIGNED, Ttd.RESIGNED_AFTER],
+    "kontrak": [Kontrak.PENDING, Kontrak.SIGNED, Kontrak.EXTENDED,
+                Kontrak.NOT_CONTINUED, Kontrak.RESIGNED_AFTER],
     "training": [Training.NOT_YET, Training.ONGOING, Training.PASSED,
                  Training.FAILED, Training.FINISHED],
     "blacklist": [Blacklist.NO, Blacklist.RESIGNED, Blacklist.RESIGNED_AFTER_TTD,
-                  Blacklist.NO_SHOW, Blacklist.VIOLATION, Blacklist.OTHER],
+                  Blacklist.RESIGNED_AFTER_KONTRAK, Blacklist.NO_SHOW,
+                  Blacklist.VIOLATION, Blacklist.OTHER],
     "role": ["admin", "recruiter"],
 }
 
@@ -153,10 +166,23 @@ FIELDS: Tuple[FieldSpec, ...] = (
               options="metode"),
 
     # --- Tanda tangan kesepakatan ---
-    FieldSpec("status_tanda_tangan", "Status Tanda Tangan", type="select", group="ttd",
-              options="ttd", default=Ttd.PENDING, export_label="STATUS TTD"),
-    FieldSpec("tanggal_tanda_tangan", "Tanggal Tanda Tangan", type="date", group="ttd",
-              export_label="TANGGAL TTD"),
+    FieldSpec("status_tanda_tangan", "Status TTD Kesepakatan", type="select", group="ttd",
+              options="ttd", default=Ttd.PENDING, export_label="STATUS TTD KESEPAKATAN",
+              aliases=("status ttd", "status tanda tangan")),
+    FieldSpec("tanggal_tanda_tangan", "Tanggal TTD Kesepakatan", type="date", group="ttd",
+              export_label="TANGGAL TTD KESEPAKATAN",
+              aliases=("tanggal ttd", "tanggal tanda tangan")),
+
+    # --- TTD kontrak kerja (setelah masa awal, default 6 bulan) ---
+    FieldSpec("status_kontrak", "Status TTD Kontrak", type="select", group="kontrak",
+              options="kontrak", default=Kontrak.PENDING,
+              export_label="STATUS TTD KONTRAK", aliases=("status kontrak",)),
+    FieldSpec("tanggal_ttd_kontrak", "Tanggal TTD Kontrak", type="date", group="kontrak",
+              hint="Terisi otomatis saat status jadi Sudah",
+              aliases=("tanggal kontrak", "tgl ttd kontrak")),
+    FieldSpec("tanggal_habis_kontrak", "Tanggal Habis Kontrak", type="date", group="kontrak",
+              hint="Terisi otomatis 6 bulan setelah TTD kontrak; dipakai reminder",
+              aliases=("habis kontrak", "kontrak berakhir")),
 
     # --- Training ---
     FieldSpec("status_training", "Status Training", type="select", group="training",
@@ -193,8 +219,9 @@ FIELD_GROUPS: Tuple[Tuple[str, str], ...] = (
     ("penilaian", "Penilaian Kandidat"),
     ("penempatan", "Penempatan"),
     ("interview", "Interview"),
-    ("ttd", "Tanda Tangan Kesepakatan"),
+    ("ttd", "TTD Kesepakatan"),
     ("training", "Training (3 Bulan)"),
+    ("kontrak", "TTD Kontrak (6 Bulan)"),
     ("blacklist", "Blacklist"),
     ("catatan", "Catatan"),
 )
@@ -276,6 +303,13 @@ def has_signed(c: dict) -> bool:
     return _norm(c.get("status_tanda_tangan")) == _norm(Ttd.SIGNED)
 
 
+def has_contract(c: dict) -> bool:
+    """Sudah menandatangani kontrak kerja (termasuk yang diperpanjang)."""
+    return _norm(c.get("status_kontrak")) in (
+        _norm(Kontrak.SIGNED), _norm(Kontrak.EXTENDED),
+    )
+
+
 @dataclass(frozen=True)
 class StageSpec:
     key: str                                  # id tab & nilai ?scope= pada export
@@ -311,6 +345,7 @@ Q_IN_TRAINING_ANY = _ci_in("status_training",
 Q_BLACKLISTED = {"status_blacklist": re.compile(f"^{re.escape(Blacklist.YES_PREFIX)}", re.I)}
 Q_PLACED = {"penempatan_fix": {"$exists": True, "$regex": r"\S"}}
 Q_SIGNED = _ci_in("status_tanda_tangan", [Ttd.SIGNED])
+Q_HAS_CONTRACT = _ci_in("status_kontrak", [Kontrak.SIGNED, Kontrak.EXTENDED])
 
 TABS: Tuple[StageSpec, ...] = (
     StageSpec("master", "Master Data", None, "ClipboardList", "indigo",
@@ -323,6 +358,8 @@ TABS: Tuple[StageSpec, ...] = (
               query=Q_BLACKLISTED),
     StageSpec("placement", "Placement", is_placed, "MapPin", "emerald",
               query=Q_PLACED),
+    StageSpec("kontrak", "TTD Kontrak", has_contract, "FileSignature", "violet",
+              query=Q_HAS_CONTRACT),
 )
 
 
@@ -338,10 +375,11 @@ TAB_BY_KEY: Dict[str, StageSpec] = {t.key: t for t in TABS}
 FUNNEL: Tuple[Tuple[str, str, Optional[Callable[[dict], bool]], Optional[dict]], ...] = (
     ("apply", "Apply", None, None),
     ("interview", "Interview", in_interview, Q_IN_INTERVIEW),
-    ("ttd", "Tanda Tangan", has_signed, Q_SIGNED),
+    ("ttd", "TTD Kesepakatan", has_signed, Q_SIGNED),
     # Funnel menghitung yang sudah selesai training juga (beda dengan tab Training).
     ("training", "Training", lambda c: in_training(c, include_finished=True), Q_IN_TRAINING_ANY),
     ("placement", "Placement", is_placed, Q_PLACED),
+    ("kontrak", "TTD Kontrak", has_contract, Q_HAS_CONTRACT),
 )
 
 

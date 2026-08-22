@@ -56,7 +56,9 @@ HIRE_NOTIFY_NAME = os.environ.get("HASAN_NAME", "Hasan")
 
 # ---------- Aturan bisnis ----------
 TRAINING_PERIOD_DAYS = 90          # masa training (3 bulan)
-TRAINING_REMINDER_DAYS = (7, 0)    # kirim reminder H-7 dan hari-H
+CONTRACT_PERIOD_DAYS = 180         # masa kontrak kerja (6 bulan)
+REMINDER_DAYS = (7, 0)             # kirim reminder H-7 dan hari-H
+TRAINING_REMINDER_DAYS = REMINDER_DAYS   # nama lama, masih dipakai sebagian kode
 QUERY_LIMIT = 5000                 # batas dokumen untuk export & job batch
 
 # Zona waktu kantor. Dipakai agar filter "tanggal input" mengikuti hari lokal,

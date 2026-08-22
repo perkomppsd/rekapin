@@ -10,8 +10,9 @@ Cara menambah normalisasi nilai: tambah entri di `NORMALIZERS`.
 from dataclasses import dataclass
 from typing import Callable, Dict, Tuple
 
-from ..schema import Blacklist, Training, Ttd
-from .common import today_str
+from ..schema import Blacklist, Kontrak, Training, Ttd
+from .. import config
+from .common import today_str, add_days
 
 
 # ---------- Helper untuk menulis kondisi ----------
@@ -46,6 +47,33 @@ RULES: Tuple[Rule, ...] = (
             {"tanggal_mulai_training": today_str()}
             if still_empty(b, i, "tanggal_mulai_training") else {}
         ),
+    ),
+    Rule(
+        name="TTD kontrak selesai -> isi tanggal TTD kontrak otomatis",
+        when=lambda b, i: became(b, i, "status_kontrak", Kontrak.SIGNED),
+        then=lambda b, i: (
+            {"tanggal_ttd_kontrak": today_str()}
+            if still_empty(b, i, "tanggal_ttd_kontrak") else {}
+        ),
+    ),
+    Rule(
+        name="TTD kontrak terisi -> hitung tanggal habis kontrak (6 bulan)",
+        when=lambda b, i: bool(value_of(b, i, "tanggal_ttd_kontrak")),
+        then=lambda b, i: (
+            {"tanggal_habis_kontrak":
+                add_days(value_of(b, i, "tanggal_ttd_kontrak"), config.CONTRACT_PERIOD_DAYS)}
+            if still_empty(b, i, "tanggal_habis_kontrak") else {}
+        ),
+    ),
+    Rule(
+        name="Mengundurkan setelah kontrak -> masuk blacklist",
+        when=lambda b, i: value_of(b, i, "status_kontrak") == Kontrak.RESIGNED_AFTER,
+        then=lambda b, i: {
+            "status_blacklist": Blacklist.RESIGNED_AFTER_KONTRAK,
+            **({"alasan_blacklist":
+                "Kandidat mengundurkan diri setelah menandatangani kontrak kerja."}
+               if still_empty(b, i, "alasan_blacklist") else {}),
+        },
     ),
     Rule(
         name="Mengundurkan setelah TTD -> masuk blacklist",
