@@ -426,19 +426,23 @@ Q_PLACED = {"penempatan_fix": {"$exists": True, "$regex": r"\S"}}
 Q_SIGNED = _ci_in("status_tanda_tangan", [Ttd.SIGNED])
 Q_HAS_CONTRACT = _ci_in("status_kontrak", [Kontrak.SIGNED, Kontrak.EXTENDED])
 
+# Urutan mengikuti alur proses; Blacklist ditaruh terakhir karena statusnya
+# terminal (bisa terjadi dari tahap mana pun).
 TABS: Tuple[StageSpec, ...] = (
     StageSpec("master", "Master Data", None, "ClipboardList", "indigo",
               stat_label="Total Kandidat"),
     StageSpec("interview", "Interview", in_interview, "Users", "amber",
               query=Q_IN_INTERVIEW),
+    StageSpec("ttd", "TTD Kesepakatan", has_signed, "Handshake", "teal",
+              query=Q_SIGNED),
     StageSpec("training", "Training", in_training, "GraduationCap", "sky",
               query=Q_IN_TRAINING),
-    StageSpec("blacklist", "Blacklist", is_blacklisted, "Ban", "rose",
-              query=Q_BLACKLISTED),
     StageSpec("placement", "Placement", is_placed, "MapPin", "emerald",
               query=Q_PLACED),
     StageSpec("kontrak", "TTD Kontrak", has_contract, "FileSignature", "violet",
               query=Q_HAS_CONTRACT),
+    StageSpec("blacklist", "Blacklist", is_blacklisted, "Ban", "rose",
+              query=Q_BLACKLISTED),
 )
 
 

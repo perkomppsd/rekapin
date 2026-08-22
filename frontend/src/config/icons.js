@@ -3,12 +3,14 @@
 
 import {
   Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download, FileSignature,
-  GraduationCap, MapPin, Plus, Settings, ShieldCheck, Sparkles, Upload, Users,
+  GraduationCap, Handshake, MapPin, Plus, Settings, ShieldCheck, Sparkles,
+  Upload, Users,
 } from "lucide-react";
 
 export const ICONS = {
   Ban, BarChart3, Bell, ClipboardList, ClipboardPaste, Download, FileSignature,
-  GraduationCap, MapPin, Plus, Settings, ShieldCheck, Sparkles, Upload, Users,
+  GraduationCap, Handshake, MapPin, Plus, Settings, ShieldCheck, Sparkles,
+  Upload, Users,
 };
 
 export const iconFor = (name) => ICONS[name] || ClipboardList;

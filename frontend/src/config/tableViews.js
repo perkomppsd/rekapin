@@ -52,6 +52,17 @@ export const VIEW_COLUMNS = {
     { key: "__rating_stack", label: "Nilai", sort: "nilai" },
     { key: "pic" },
   ],
+  ttd: [
+    { key: "nama", variant: "primary", sort: "nama" },
+    { key: "nik", label: "NIK", variant: "mono" },
+    { key: "posisi_fix", label: "Posisi", fallback: "apply" },
+    { key: "penempatan_fix", label: "Penempatan", fallback: "rencana_penempatan",
+      sort: "penempatan_fix" },
+    { key: "tanggal_tanda_tangan", label: "Tanggal TTD", variant: "mono" },
+    { key: "status_tanda_tangan", label: "Status" },
+    { key: "status_kontrak", label: "TTD Kontrak" },
+    { key: "pic" },
+  ],
   training: [
     { key: "nama", variant: "primary", sort: "nama" },
     { key: "posisi_fix", label: "Posisi", fallback: "posisi_penempatan" },

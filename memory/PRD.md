@@ -146,3 +146,12 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Export dapat kolom NILAI RATA-RATA
 - Script scripts/isi_nilai_rata.py untuk data lama (7 kandidat diperbarui)
 - Unit test: 133 -> 141
+
+### v14 (tab TTD Kesepakatan + layout ringkasan)
+- Tab & kartu statistik "TTD Kesepakatan" ditambahkan (predikat has_signed & Q_SIGNED sudah ada, dipakai funnel) — ikon Handshake, warna teal
+- Urutan tab disesuaikan alur proses: Master, Interview, TTD Kesepakatan, Training, Placement, TTD Kontrak, Blacklist (blacklist terakhir karena status terminal)
+- Kolom tabel khusus tab ttd (tanggal & status TTD kesepakatan + status kontrak)
+- Layout dashboard: kartu statistik (kiri, 2/5) sejajar funnel (kanan, 3/5) mulai layar xl; keduanya dipadatkan, hemat ~500px tinggi halaman
+- Klik baris tabel = buka form edit (tidak terpicu saat menyorot teks / klik menu aksi); bisa lewat Enter/Space
+- Urutan dropdown metode interview: Offline sebelum Online
+- Unit test: 141 -> 142
