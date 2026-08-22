@@ -661,19 +661,31 @@ def test_setiap_field_di_daftar_referensi_memang_ada():
             assert schema.FIELD_BY_KEY[key].options_ref == ref.key, key
 
 
-def test_field_tidak_boleh_punya_dua_sumber_pilihan():
-    for f in schema.FIELDS:
-        assert not (f.options and f.options_ref), (
-            f"{f.key} tidak boleh memakai STATUS_SETS dan daftar referensi sekaligus")
-
-
-def test_field_select_punya_salah_satu_sumber_pilihan():
-    for f in schema.FIELDS:
-        if f.type == "select":
-            assert f.options or f.options_ref, f"{f.key} dropdown tapi tanpa sumber pilihan"
-
-
 def test_reference_list_for():
     assert schema.reference_list_for("penempatan_fix").key == "unit_usaha"
     assert schema.reference_list_for("posisi_fix").key == "jobdesk"
     assert schema.reference_list_for("nama") is None
+
+
+# ---------------------------------------------------------------------------
+# PIC dipilih dari daftar user
+# ---------------------------------------------------------------------------
+def test_pic_jadi_dropdown_dari_daftar_user():
+    pic = schema.FIELD_BY_KEY["pic"]
+    assert pic.type == "select"
+    assert pic.options_source == "users"
+    assert pic.options is None and pic.options_ref is None
+
+
+def test_pic_email_tetap_ada_untuk_hak_akses():
+    # pic_email dipakai scope.query_filter, jadi tidak boleh dihapus dari schema.
+    assert "pic_email" in schema.FIELD_BY_KEY
+    assert "pic_email" in schema.FIELD_LABELS
+
+
+def test_field_hanya_punya_satu_sumber_pilihan():
+    for f in schema.FIELDS:
+        sumber = [bool(f.options), bool(f.options_ref), bool(f.options_source)]
+        assert sum(sumber) <= 1, f"{f.key} punya lebih dari satu sumber pilihan"
+        if f.type == "select":
+            assert any(sumber), f"{f.key} dropdown tapi tanpa sumber pilihan"

@@ -86,6 +86,29 @@ def from_import_row(values: dict) -> Optional[dict]:
     return doc
 
 
+async def fill_pic_email(rows: List[dict]) -> int:
+    """Lengkapi pic_email dari nama PIC yang cocok dengan user sistem.
+
+    Sheet import sering hanya berisi nama PIC. Tanpa email yang benar, recruiter
+    yang bersangkutan tidak akan bisa melihat kandidatnya. Return jumlah terisi.
+    """
+    butuh = {(r.get("pic") or "").strip() for r in rows
+             if (r.get("pic") or "").strip() and not (r.get("pic_email") or "").strip()}
+    if not butuh:
+        return 0
+    users = await db.users.find(
+        {"name": {"$in": sorted(butuh)}}, {"_id": 0, "name": 1, "email": 1}
+    ).to_list(500)
+    by_name = {u["name"]: u["email"] for u in users}
+    terisi = 0
+    for r in rows:
+        nama_pic = (r.get("pic") or "").strip()
+        if nama_pic and not (r.get("pic_email") or "").strip() and nama_pic in by_name:
+            r["pic_email"] = by_name[nama_pic]
+            terisi += 1
+    return terisi
+
+
 async def fill_missing_nik(rows: List[dict]) -> int:
     """NIK wajib, tapi sheet lama sering tidak punya kolom NIK. Baris tanpa NIK
     diberi NIK sementara supaya import tidak gagal. Return jumlah yang diisi."""

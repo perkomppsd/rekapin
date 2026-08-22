@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { useMeta } from "@/context/MetaContext";
 import FieldInput from "@/components/FieldInput";
-import { FORM_LABEL_OVERRIDES, GROUP_WARNINGS, VISIBLE_WHEN } from "@/config/formFields";
+import {
+  DERIVED_FIELDS, GROUP_WARNINGS, LINKED_FIELDS, FORM_LABEL_OVERRIDES, VISIBLE_WHEN,
+} from "@/config/formFields";
 import { T } from "@/config/theme";
 
 const RATING_GROUP = "penilaian";
@@ -57,7 +59,18 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
       : defaults);
   }, [open, initial, defaults]);
 
-  const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const update = (k, v) => setForm((f) => {
+    const next = { ...f, [k]: v };
+    // Field bertaut: memilih PIC sekaligus mengisi email PIC.
+    const link = LINKED_FIELDS[k];
+    if (link) {
+      const sumber = (meta[link.from] || []).find((o) => o[link.match] === v);
+      Object.entries(link.fills).forEach(([tujuan, prop]) => {
+        next[tujuan] = sumber ? sumber[prop] : "";
+      });
+    }
+    return next;
+  });
   const updateCustom = (k, v) =>
     setForm((f) => ({ ...f, custom_data: { ...(f.custom_data || {}), [k]: v } }));
 
@@ -112,6 +125,7 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
                       label={FORM_LABEL_OVERRIDES[f.key]}
                       value={form[f.key]}
                       onChange={(v) => update(f.key, v)}
+                      readOnly={Boolean(DERIVED_FIELDS[f.key])}
                     />
                   ))}
                   {warning ? <Warning text={warning} /> : null}

@@ -39,6 +39,7 @@ class FieldSpec:
     default: Any = ""                          # nilai default saat kandidat dibuat
     options: Optional[str] = None              # nama set pilihan tetap di STATUS_SETS
     options_ref: Optional[str] = None          # nama daftar referensi (dikelola admin)
+    options_source: Optional[str] = None       # sumber pilihan dinamis lain ("users")
     required: bool = False
     placeholder: str = ""
     hint: str = ""                             # teks bantuan di form
@@ -257,9 +258,13 @@ FIELDS: Tuple[FieldSpec, ...] = (
     # --- Catatan & PIC ---
     FieldSpec("keterangan", "Keterangan", type="textarea", group="catatan", span=2,
               aliases=("catatan", "notes"), paste_index=9),
-    FieldSpec("pic", "PIC", group="pribadi", searchable=True, paste_index=7),
+    # PIC dipilih dari daftar user, bukan diketik: email-nya menentukan hak akses,
+    # jadi satu typo bikin recruiter kehilangan akses tanpa pesan error.
+    FieldSpec("pic", "PIC", type="select", group="pribadi", searchable=True,
+              options_source="users", paste_index=7),
     FieldSpec("pic_email", "Email PIC", type="email", group="pribadi",
-              placeholder="pic@company.com", hint="Dipakai untuk reminder & hak akses",
+              placeholder="terisi otomatis dari PIC",
+              hint="Menentukan hak akses & penerima reminder — ikut PIC yang dipilih",
               aliases=("email pic", "pic email"), paste_index=8),
 )
 

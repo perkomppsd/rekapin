@@ -46,6 +46,11 @@ function reportImport(data, verb) {
   const skipped = data.skipped ?? 0;
   const autoNik = data.auto_nik ?? 0;
   if (inserted) toast.success(`${inserted} kandidat berhasil ${verb}`);
+  const autoPic = data.auto_pic ?? 0;
+  if (autoPic) {
+    toast.info(`${autoPic} kandidat dapat email PIC otomatis`,
+      { description: "Nama PIC dicocokkan dengan akun user yang ada." });
+  }
   if (autoNik) {
     toast.info(`${autoNik} kandidat diberi NIK sementara`, {
       description: "Baris tanpa NIK diberi nomor sementara. Ganti kalau KTP sudah terkumpul.",

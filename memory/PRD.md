@@ -125,3 +125,12 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Halaman Setting jadi "Data Master": kartu pengelola per daftar (ReferenceListManager, generik) + kolom kustom
 - Script scripts/isi_daftar_referensi.py menyerap nilai teks bebas yang sudah ada (9 item terserap dari data contoh)
 - Unit test: 126 -> 132
+
+### v12 (PIC dipilih dari daftar user)
+- Field `pic` jadi dropdown dari daftar user (FieldSpec.options_source="users"), bukan teks bebas
+- Memilih PIC otomatis mengisi `pic_email` (LINKED_FIELDS di config/formFields.js); pic_email jadi tampil-saja (DERIVED_FIELDS) supaya tidak bisa berbeda dari PIC-nya
+- Alasan: pic_email menentukan hak akses recruiter & penerima reminder — typo bikin recruiter kehilangan akses tanpa error
+- Endpoint baru GET /api/users/options (nama + email saja, boleh diakses semua user login); GET /api/users lengkap tetap admin-only
+- services/candidates.py -> fill_pic_email(): baris import yang hanya berisi nama PIC dilengkapi emailnya dari akun user yang cocok (dilaporkan sebagai auto_pic)
+- Diuji: import "pic: Rina Recruiter" tanpa email -> pic_email terisi -> Rina langsung melihat kandidatnya
+- Unit test: 132 -> 133 (dua test lama yang tercakup test baru dihapus)

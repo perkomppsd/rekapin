@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..db import db
 from ..models import UserCreate, UserUpdate
 from ..schema import STATUS_SETS
-from ..security import hash_password, require_admin
+from ..security import get_current_user, hash_password, require_admin
 from ..services.common import now_iso
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -19,6 +19,20 @@ MAX_USERS = 200
 def _assert_valid_role(role: str) -> None:
     if role not in ROLES:
         raise HTTPException(status_code=400, detail="Role tidak valid")
+
+
+@router.get("/options")
+async def user_options(user: dict = Depends(get_current_user)):
+    """Nama & email semua user — untuk mengisi dropdown PIC.
+
+    Bisa diakses semua user login (bukan hanya admin) karena recruiter perlu
+    menugaskan kandidat ke rekannya. Hanya nama & email yang dikirim.
+    """
+    docs = await db.users.find(
+        {}, {"_id": 0, "name": 1, "email": 1}
+    ).sort("name", 1).to_list(MAX_USERS)
+    return [{"nama": d.get("name", ""), "email": d.get("email", "")}
+            for d in docs if d.get("name")]
 
 
 @router.get("")

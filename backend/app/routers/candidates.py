@@ -15,7 +15,8 @@ from ..models import BulkImportRequest, Candidate, CandidateCreate, CandidateUpd
 from ..security import get_current_user
 from ..services import excel, history, listing, nik as nik_service, scope
 from ..services.candidates import (assert_valid_birthdate, fill_missing_nik,
-                                  from_import_row, prepare_new, split_by_nik)
+                                  fill_pic_email, from_import_row, prepare_new,
+                                  split_by_nik)
 from ..services.common import now_iso
 from ..services.notifications import on_candidate_change
 from ..services.rules import apply_auto_rules
@@ -97,6 +98,7 @@ async def create_candidate(payload: CandidateCreate, bg: BackgroundTasks,
     # NIK opsional, tapi kalau diisi harus valid & belum dipakai kandidat lain.
     data["nik"] = await nik_service.assert_available(data.get("nik"))
     data["tanggal_lahir"] = assert_valid_birthdate(data.get("tanggal_lahir"))
+    await fill_pic_email([data])
     doc = prepare_new(data, user)
     await db.candidates.insert_one(doc)
     await history.log(doc["id"], doc["nama"], "created",
@@ -113,6 +115,7 @@ async def temporary_nik(user: dict = Depends(get_current_user)):
 
 async def _insert_import(rows: List[dict], user: dict, action: str, label: str) -> dict:
     """Simpan hasil import: baris bermasalah dilewati & dilaporkan, sisanya masuk."""
+    auto_pic = await fill_pic_email(rows)
     auto_nik = await fill_missing_nik(rows)
     usable, skipped = await split_by_nik(rows)
     stamp = now_iso()
@@ -121,7 +124,7 @@ async def _insert_import(rows: List[dict], user: dict, action: str, label: str) 
         await db.candidates.insert_many(docs)
         await history.log_many(docs, action, label, user, stamp)
     return {"inserted": len(docs), "skipped": len(skipped),
-            "duplicates": skipped, "auto_nik": auto_nik}
+            "duplicates": skipped, "auto_nik": auto_nik, "auto_pic": auto_pic}
 
 
 @router.post("/bulk")

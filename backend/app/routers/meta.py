@@ -8,6 +8,7 @@ ikut berubah tanpa edit kode frontend.
 from fastapi import APIRouter, Depends
 
 from .. import schema
+from ..db import db
 from ..services import nik as nik_service, references
 from ..emailing import templates
 from ..security import get_current_user
@@ -23,8 +24,10 @@ def _field_payload(f: schema.FieldSpec, ref_values: dict) -> dict:
         "group": f.group,
         "default": f.default,
         "options": (list(schema.STATUS_SETS.get(f.options, [])) if f.options
-                    else ref_values.get(f.options_ref) if f.options_ref else None),
+                    else ref_values.get(f.options_ref or f.options_source)
+                    if (f.options_ref or f.options_source) else None),
         "options_ref": f.options_ref,
+        "options_source": f.options_source,
         "required": f.required,
         "placeholder": f.placeholder,
         "hint": f.hint,
@@ -34,11 +37,21 @@ def _field_payload(f: schema.FieldSpec, ref_values: dict) -> dict:
     }
 
 
+async def _user_options() -> list:
+    docs = await db.users.find({}, {"_id": 0, "name": 1, "email": 1}).sort(
+        "name", 1).to_list(500)
+    return [{"nama": d.get("name", ""), "email": d.get("email", "")}
+            for d in docs if d.get("name")]
+
+
 async def build_meta() -> dict:
     # Pilihan untuk field ber-`options_ref` diambil dari daftar yang dikelola admin.
     ref_values = await references.all_names()
+    users = await _user_options()
+    ref_values["users"] = [u["nama"] for u in users]
     return {
         "fields": [_field_payload(f, ref_values) for f in schema.FIELDS],
+        "user_options": users,
         "reference_lists": [
             {"key": r.key, "label": r.label, "singular": r.singular,
              "description": r.description, "fields": list(r.fields),

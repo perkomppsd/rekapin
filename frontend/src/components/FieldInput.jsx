@@ -110,11 +110,22 @@ function FieldAction({ action, fieldKey, onChange }) {
   );
 }
 
-export default function FieldInput({ field, label, value, onChange, testid }) {
+// Field yang nilainya berasal dari field lain: ditampilkan tapi tidak bisa
+// diketik, supaya tidak bisa berbeda dari sumbernya.
+function ReadOnlyValue({ value, testid, placeholder }) {
+  return (
+    <div data-testid={testid}
+      className={`${FORM.input} h-10 flex items-center px-3 rounded-md text-sm opacity-70 select-all`}>
+      {value || <span className="text-slate-500">{placeholder || "—"}</span>}
+    </div>
+  );
+}
+
+export default function FieldInput({ field, label, value, onChange, testid, readOnly = false }) {
   const Renderer = RENDERERS[field.type] || DefaultInput;
   const id = testid || testIdFor(field);
   const action = FIELD_ACTIONS[field.key];
-  const showAction = action && !action.hideIf?.(value);
+  const showAction = !readOnly && action && !action.hideIf?.(value);
   const dynamicHint = DYNAMIC_HINTS[field.key]?.(value);
   return (
     <div className={`space-y-1.5 ${field.span === 2 ? "md:col-span-2" : ""}`}>
@@ -124,7 +135,9 @@ export default function FieldInput({ field, label, value, onChange, testid }) {
       </Label>
       <div className={showAction ? "flex items-center gap-2" : undefined}>
         <div className={showAction ? "flex-1 min-w-0" : undefined}>
-          <Renderer field={field} value={value} onChange={onChange} testid={id} />
+          {readOnly
+            ? <ReadOnlyValue value={value} testid={id} placeholder={field.placeholder} />
+            : <Renderer field={field} value={value} onChange={onChange} testid={id} />}
         </div>
         {showAction && (
           <FieldAction action={action} fieldKey={field.key} onChange={onChange} />

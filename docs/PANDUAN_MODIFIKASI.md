@@ -240,6 +240,35 @@ Perilaku yang sudah diatur:
 Nilai teks bebas yang sudah ada sebelum daftar dibuat bisa diserap sekali jalan:
 `cd backend && .venv/bin/python scripts/isi_daftar_referensi.py --tulis`
 
+### Dropdown dari sumber lain (bukan daftar referensi)
+
+Selain `options_ref`, ada `options_source` untuk sumber dinamis yang bukan data
+master — saat ini `"users"`, dipakai field **PIC**:
+
+```python
+FieldSpec("pic", "PIC", type="select", group="pribadi", options_source="users"),
+```
+
+Pilihannya diisi di `app/routers/meta.py` (`_user_options`). Satu field boleh
+punya **satu** sumber pilihan saja (`options` / `options_ref` / `options_source`)
+— dijaga oleh test.
+
+### Field yang mengisi field lain
+
+`pic_email` menentukan hak akses & penerima reminder, jadi tidak boleh diketik
+manual (satu typo = recruiter kehilangan akses tanpa pesan error). Memilih PIC
+otomatis mengisinya. Diatur di `frontend/src/config/formFields.js`:
+
+```js
+export const LINKED_FIELDS = {
+  pic: { from: "user_options", match: "nama", fills: { pic_email: "email" } },
+};
+export const DERIVED_FIELDS = { pic_email: { dari: "pic" } };   // tampil, tidak bisa diketik
+```
+
+Di sisi server, `services/candidates.py -> fill_pic_email()` melengkapi
+`pic_email` untuk baris import yang hanya berisi nama PIC.
+
 ---
 
 ## Resep 3 — Menambah tab baru di dashboard

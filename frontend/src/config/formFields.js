@@ -60,6 +60,25 @@ export const FIELD_ACTIONS = {
   },
 };
 
+// Field yang mengisi field lain saat dipilih.
+//   from  : nama daftar di meta yang berisi objeknya (mis. user_options)
+//   match : properti yang dibandingkan dengan nilai yang dipilih
+//   fills : { field_tujuan: properti_sumber }
+// Dipakai supaya PIC cukup dipilih sekali dan email-nya (yang menentukan hak
+// akses & penerima reminder) tidak perlu diketik manual.
+export const LINKED_FIELDS = {
+  pic: {
+    from: "user_options",
+    match: "nama",
+    fills: { pic_email: "email" },
+  },
+};
+
+// Field yang tidak diketik langsung karena nilainya berasal dari field lain.
+export const DERIVED_FIELDS = {
+  pic_email: { dari: "pic" },
+};
+
 // Keterangan yang ikut berubah sesuai isi form (muncul di bawah input).
 export const DYNAMIC_HINTS = {
   tanggal_lahir: (value) => {
