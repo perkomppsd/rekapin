@@ -75,13 +75,14 @@ function reportImport(data, verb) {
 
 function StatCard({ icon: Icon, label, value, toneName = "indigo", testid }) {
   return (
-    <div className={`stat-card ${T.panel} p-5`} data-testid={testid}>
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-slate-500 text-[10px] tracking-[0.25em] uppercase">{label}</div>
-          <div className="font-display text-3xl font-bold text-slate-50 mt-2">{value}</div>
+    <div className={`stat-card ${T.panel} p-4`} data-testid={testid}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-slate-500 text-[10px] tracking-[0.2em] uppercase truncate"
+            title={label}>{label}</div>
+          <div className="font-display text-2xl font-bold text-slate-50 mt-1">{value}</div>
         </div>
-        <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${tone(toneName, "card")}`}>
+        <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${tone(toneName, "card")}`}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
@@ -344,21 +345,25 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Kartu statistik — satu per tab */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {tabs.filter((t) => t.stat !== false).map((t) => (
-            <StatCard
-              key={t.key}
-              icon={iconFor(t.icon)}
-              label={t.stat_label || t.label}
-              value={(t.key === "master" ? stats.total : stats[t.key]) ?? 0}
-              toneName={t.tone}
-              testid={t.key === "master" ? "stat-total" : `stat-${t.key}`}
-            />
-          ))}
+        {/* Ringkasan: kartu statistik di kiri, funnel di kanan supaya tidak
+            memakan tinggi halaman. Di layar kecil keduanya bertumpuk. */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 items-start">
+          <div className="xl:col-span-2 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-2 gap-3">
+            {tabs.filter((t) => t.stat !== false).map((t) => (
+              <StatCard
+                key={t.key}
+                icon={iconFor(t.icon)}
+                label={t.stat_label || t.label}
+                value={(t.key === "master" ? stats.total : stats[t.key]) ?? 0}
+                toneName={t.tone}
+                testid={t.key === "master" ? "stat-total" : `stat-${t.key}`}
+              />
+            ))}
+          </div>
+          <div className="xl:col-span-3">
+            <FunnelChart stages={funnel} />
+          </div>
         </div>
-
-        <FunnelChart stages={funnel} />
 
         {/* Filter & tabel */}
         <div className="space-y-4">

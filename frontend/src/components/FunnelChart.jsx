@@ -12,25 +12,26 @@ export default function FunnelChart({ stages = [] }) {
   };
 
   return (
-    <div className="border border-slate-800 rounded-xl bg-slate-900/40 p-6" data-testid="funnel-chart">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="font-display text-lg font-semibold text-slate-50">Funnel Rekrutmen</h3>
-          <p className="text-slate-400 text-sm">Alur kandidat dari lamaran sampai penempatan — lihat drop-off tiap tahap.</p>
-        </div>
+    <div className="border border-slate-800 rounded-xl bg-slate-900/40 p-5 h-full"
+      data-testid="funnel-chart">
+      <div className="mb-4">
+        <h3 className="font-display text-lg font-semibold text-slate-50">Funnel Rekrutmen</h3>
+        <p className="text-slate-400 text-xs">
+          Alur kandidat dari lamaran sampai kontrak — lihat drop-off tiap tahap.
+        </p>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {stages.map((s, i) => {
           const width = Math.max((s.count / max) * 100, 3);
           const color = colors[i % colors.length];
           return (
             <div key={s.key} data-testid={`funnel-stage-${s.key}`}>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs flex items-center justify-center">{i + 1}</span>
-                  <span className="text-slate-100 font-medium">{s.label}</span>
+              <div className="flex items-center justify-between text-sm mb-0.5 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="text-slate-100 font-medium truncate">{s.label}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-slate-100 font-mono font-medium">{s.count}</span>
                   {i > 0 && (
                     <span className="text-xs text-slate-400">
@@ -40,7 +41,7 @@ export default function FunnelChart({ stages = [] }) {
                   )}
                 </div>
               </div>
-              <div className="h-8 bg-slate-950/60 rounded-md overflow-hidden border border-slate-800">
+              <div className="h-5 bg-slate-950/60 rounded overflow-hidden border border-slate-800">
                 <div
                   className={`h-full ${barTone[color]} transition-[width] duration-500`}
                   style={{ width: `${width}%` }}
