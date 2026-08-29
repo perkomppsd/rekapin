@@ -91,3 +91,4 @@ android-sdk/
 backend/.venv/
 frontend/build/
 backend/uploads/
+backend/uploads_test/

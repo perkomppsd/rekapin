@@ -175,3 +175,12 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Tema terang/gelap: ThemeContext (kelas `dark` di <html>, disimpan di localStorage, default ikut setelan sistem) + tombol di semua header
 - Warna disapu jadi pasangan terang/gelap di 22 file + warna aksen disesuaikan agar terbaca di latar putih; glass-nav & tekstur noise punya versi per tema
 - Unit test: 156 -> 159
+
+### v17 (perbaikan siklus hidup berkas + rate limit login)
+- FIX: berkas kini punya pemilik tunggal (pemilik_tipe/pemilik_id). Sebelumnya rujukan berkas disalin saat lamaran diterima, sehingga menghapus lamaran ikut menghapus CV/KTP milik kandidat (rujukan jadi rusak)
+- Lamaran diterima -> kepemilikan berkas DIPINDAH ke kandidat (files.pindah_pemilik)
+- FIX: menghapus kandidat kini ikut menghapus dokumen pribadinya (KTP/ijazah/SKCK) dari server; sebelumnya file tetap tersimpan setelah data "dihapus"
+- FIX: login kini dibatasi 10 percobaan GAGAL per IP / 15 menit (LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW_MINUTES); login yang berhasil tidak memakan kuota
+- ratelimit.py dipisah jadi ensure()/record() + namespace, jadi hitungan login & lamaran publik tidak bercampur
+- Test HTTP baru tests/test_http_publik.py (20 test): endpoint internal wajib login, field internal tidak bocor, lowongan Draft tersembunyi, balasan lamaran seragam, KTP tidak bisa diambil lewat endpoint poster, siklus hidup berkas, rate limit login
+- Unit test: 159 -> 182

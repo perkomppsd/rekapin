@@ -80,8 +80,11 @@ async def kirim_lamaran(
     ktp: UploadFile = File(...),
     skck: Optional[UploadFile] = File(None),
 ):
-    ratelimit.check(request, limit=config.PUBLIC_RATE_LIMIT,
-                    window_minutes=config.PUBLIC_RATE_WINDOW_MINUTES)
+    ratelimit.check(request, namespace="lamaran",
+                    limit=config.PUBLIC_RATE_LIMIT,
+                    window_minutes=config.PUBLIC_RATE_WINDOW_MINUTES,
+                    pesan="Terlalu banyak lamaran dari perangkat ini. "
+                          f"Coba lagi dalam {config.PUBLIC_RATE_WINDOW_MINUTES} menit.")
 
     job = await jobs.ambil_publik(slug)
 

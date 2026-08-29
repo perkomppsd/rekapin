@@ -89,6 +89,7 @@ async def set_poster(job_id: str, upload) -> dict:
         upload, kategori="Poster lowongan",
         ekstensi_diizinkan=files.GAMBAR_SAJA,
         publik=True,          # poster memang untuk dilihat pelamar
+        pemilik_tipe="lowongan", pemilik_id=job_id,
     )
     lama = (job.get("poster") or {}).get("id")
     await db[COLLECTION].update_one(

@@ -65,6 +65,10 @@ async def buat(data: dict, berkas: Dict[str, dict], job: dict) -> dict:
     pemilik = await nik_service.find_owner(doc["nik"]) if doc["nik"] else None
     doc["nik_sudah_terdaftar"] = bool(pemilik)
     await db[COLLECTION].insert_one(doc)
+    # Berkas resmi jadi milik lamaran ini sampai (kalau) dipindah ke kandidat.
+    await files_service.pindah_pemilik(
+        [(b or {}).get("id") for b in berkas.values()],
+        tipe="lamaran", id_baru=doc["id"])
     doc.pop("_id", None)
     return doc
 
@@ -133,8 +137,13 @@ async def terima(app_id: str, user: dict) -> dict:
     data["keterangan"] = f"Dari portal lowongan — lamaran {lamaran['nomor']}"
     doc = prepare_new(data, user)
     doc["lamaran_id"] = app_id
-    doc["berkas"] = lamaran.get("berkas", {})       # berkas ikut ke kandidat
+    doc["berkas"] = lamaran.get("berkas", {})
     await db.candidates.insert_one(doc)
+    # Kepemilikan berkas PINDAH ke kandidat. Kalau hanya disalin, menghapus
+    # lamaran akan ikut menghapus berkas yang masih dipakai kandidat.
+    await files_service.pindah_pemilik(
+        [(b or {}).get("id") for b in (lamaran.get("berkas") or {}).values()],
+        tipe="kandidat", id_baru=doc["id"])
 
     await db[COLLECTION].update_one({"id": app_id}, {"$set": {
         "status": DITERIMA,
@@ -146,8 +155,9 @@ async def terima(app_id: str, user: dict) -> dict:
 
 
 async def hapus(app_id: str) -> dict:
-    lamaran = await ambil(app_id)
-    jumlah = await files_service.hapus_banyak(
-        [(b or {}).get("id") for b in (lamaran.get("berkas") or {}).values()])
+    await ambil(app_id)
+    # Hanya berkas yang MASIH dimiliki lamaran ini. Kalau sudah diterima jadi
+    # kandidat, berkasnya milik kandidat dan tidak boleh ikut terhapus.
+    jumlah = await files_service.hapus_milik("lamaran", app_id)
     await db[COLLECTION].delete_one({"id": app_id})
     return {"ok": True, "berkas_dihapus": jumlah}

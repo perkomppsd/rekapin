@@ -26,20 +26,36 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def check(request: Request, *, limit: int, window_minutes: int) -> None:
-    """Raise 429 kalau IP ini sudah melewati batas dalam rentang waktu."""
+def _antrian(request: Request, namespace: str, window_minutes: int):
+    """Antrian waktu percobaan untuk (namespace, IP), sudah dibersihkan."""
     now = time.monotonic()
-    window = window_minutes * 60
-    antrian = _hits[client_ip(request)]
-    while antrian and now - antrian[0] > window:
+    antrian = _hits[f"{namespace}:{client_ip(request)}"]
+    while antrian and now - antrian[0] > window_minutes * 60:
         antrian.popleft()
+    return antrian, now
+
+
+def ensure(request: Request, *, namespace: str, limit: int, window_minutes: int,
+           pesan: str) -> None:
+    """Raise 429 kalau sudah melewati batas — TANPA menambah hitungan."""
+    antrian, _ = _antrian(request, namespace, window_minutes)
     if len(antrian) >= limit:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Terlalu banyak lamaran dari perangkat ini. "
-                   f"Coba lagi dalam {window_minutes} menit.",
-        )
+        raise HTTPException(status_code=429, detail=pesan)
+
+
+def record(request: Request, *, namespace: str, window_minutes: int) -> None:
+    """Catat satu percobaan."""
+    antrian, now = _antrian(request, namespace, window_minutes)
     antrian.append(now)
+
+
+def check(request: Request, *, limit: int, window_minutes: int,
+          namespace: str = "publik", pesan: str = "") -> None:
+    """Cek sekaligus catat (dipakai endpoint yang setiap panggilannya dihitung)."""
+    ensure(request, namespace=namespace, limit=limit, window_minutes=window_minutes,
+           pesan=pesan or (f"Terlalu banyak permintaan dari perangkat ini. "
+                           f"Coba lagi dalam {window_minutes} menit."))
+    record(request, namespace=namespace, window_minutes=window_minutes)
 
 
 def reset() -> None:

@@ -65,6 +65,10 @@ MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 PUBLIC_RATE_LIMIT = int(os.environ.get("PUBLIC_RATE_LIMIT", "5"))
 PUBLIC_RATE_WINDOW_MINUTES = int(os.environ.get("PUBLIC_RATE_WINDOW_MINUTES", "60"))
 
+# Batas percobaan login GAGAL per IP. Login yang berhasil tidak dihitung.
+LOGIN_RATE_LIMIT = int(os.environ.get("LOGIN_RATE_LIMIT", "10"))
+LOGIN_RATE_WINDOW_MINUTES = int(os.environ.get("LOGIN_RATE_WINDOW_MINUTES", "15"))
+
 
 # ---------- Aturan bisnis ----------
 TRAINING_PERIOD_DAYS = 90          # masa training (3 bulan)

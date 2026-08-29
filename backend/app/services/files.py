@@ -41,7 +41,8 @@ def _sniff(head: bytes) -> Optional[Tuple[str, str]]:
 
 async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "",
                  ekstensi_diizinkan: Optional[tuple] = None,
-                 publik: bool = False) -> dict:
+                 publik: bool = False, pemilik_tipe: str = "",
+                 pemilik_id: str = "") -> dict:
     """Validasi & simpan satu berkas. Return metadata untuk disimpan di dokumen.
 
     publik=True HANYA untuk berkas yang memang boleh dilihat siapa saja
@@ -84,6 +85,11 @@ async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "",
         "path": str(path),
         "keterangan": keterangan,
         "publik": publik,
+        # Satu berkas hanya boleh dimiliki SATU dokumen. Tanpa ini, lamaran dan
+        # kandidat sama-sama merasa memilikinya, lalu yang satu menghapus file
+        # yang masih dipakai yang lain.
+        "pemilik_tipe": pemilik_tipe,
+        "pemilik_id": pemilik_id,
         "created_at": now_iso(),
     }
     await db[COLLECTION].insert_one(dict(doc))
@@ -115,6 +121,33 @@ async def ambil(file_id: str) -> Tuple[Path, dict]:
     if not path.is_file():
         raise HTTPException(status_code=404, detail="File sudah tidak ada di server")
     return path, doc
+
+
+async def pindah_pemilik(file_ids, *, tipe: str, id_baru: str) -> int:
+    """Pindahkan kepemilikan berkas (mis. lamaran -> kandidat saat diterima)."""
+    ids = [f for f in file_ids if f]
+    if not ids:
+        return 0
+    hasil = await db[COLLECTION].update_many(
+        {"id": {"$in": ids}},
+        {"$set": {"pemilik_tipe": tipe, "pemilik_id": id_baru}},
+    )
+    return hasil.modified_count
+
+
+async def hapus_milik(tipe: str, pemilik_id: str) -> int:
+    """Hapus semua berkas yang dimiliki satu dokumen.
+
+    Berkas yang kepemilikannya sudah dipindah TIDAK ikut terhapus — itulah
+    yang menjaga berkas kandidat tetap utuh saat lamarannya dihapus.
+    """
+    docs = await db[COLLECTION].find(
+        {"pemilik_tipe": tipe, "pemilik_id": pemilik_id}, {"_id": 0, "id": 1, "path": 1}
+    ).to_list(1000)
+    for doc in docs:
+        Path(doc["path"]).unlink(missing_ok=True)
+        await db[COLLECTION].delete_one({"id": doc["id"]})
+    return len(docs)
 
 
 async def hapus_banyak(file_ids) -> int:

@@ -844,3 +844,43 @@ def test_endpoint_publik_hanya_mengambil_berkas_bertanda_publik():
     from app.services import files
     sumber = inspect.getsource(files.ambil_publik)
     assert '"publik": True' in sumber
+
+
+def test_berkas_punya_pemilik_tunggal():
+    """Satu berkas hanya dimiliki satu dokumen. Kalau rujukannya cuma disalin,
+    menghapus lamaran akan ikut menghapus berkas yang masih dipakai kandidat."""
+    import inspect
+    from app.services import files
+    assert hasattr(files, "pindah_pemilik") and hasattr(files, "hapus_milik")
+    sumber = inspect.getsource(files.hapus_milik)
+    assert "pemilik_tipe" in sumber and "pemilik_id" in sumber
+
+
+def test_rate_limit_punya_namespace_terpisah():
+    """Batas login dan batas lamaran publik tidak boleh berbagi hitungan."""
+    from app.services import ratelimit
+
+    class Req:
+        headers = {}
+        class client:
+            host = "10.0.0.9"
+
+    ratelimit.reset()
+    req = Req()
+    for _ in range(3):
+        ratelimit.record(req, namespace="login", window_minutes=15)
+    # Namespace lain masih bersih.
+    ratelimit.ensure(req, namespace="lamaran", limit=3, window_minutes=60, pesan="x")
+    with pytest.raises(Exception):
+        ratelimit.ensure(req, namespace="login", limit=3, window_minutes=15, pesan="x")
+    ratelimit.reset()
+
+
+def test_login_gagal_dicatat_login_berhasil_tidak():
+    import inspect
+    from app.routers import auth
+    sumber = inspect.getsource(auth.login)
+    assert "ratelimit.ensure" in sumber, "login harus dicek rate limit"
+    # record() hanya dipanggil di cabang gagal
+    setelah_ensure = sumber.split("ratelimit.ensure")[1]
+    assert setelah_ensure.index("ratelimit.record") > setelah_ensure.index("if not user")

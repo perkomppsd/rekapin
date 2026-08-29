@@ -522,3 +522,27 @@ cd backend && pytest tests/test_rekapin_backend.py
 status valid, urutan kolom export, aturan otomatis, render template, import
 Excel). **Jalankan test ini setiap kali mengubah `app/schema.py`** — kalau
 lulus, kemungkinan besar perubahan Anda aman.
+
+
+---
+
+## Aturan berkas (penting)
+
+Setiap berkas punya **satu pemilik** (`pemilik_tipe` + `pemilik_id` di koleksi
+`files`). Ini bukan detail teknis biasa — tanpa itu pernah terjadi bug: lamaran
+dan kandidat sama-sama menyimpan rujukan ke berkas yang sama, lalu menghapus
+lamaran ikut menghapus CV/KTP milik kandidat.
+
+Aturannya:
+
+- Lamaran masuk  -> berkas dimiliki `lamaran/<id>`
+- Lamaran diterima -> kepemilikan **dipindah** ke `kandidat/<id>`
+  (`files.pindah_pemilik`), bukan disalin
+- Menghapus lamaran/kandidat -> `files.hapus_milik(tipe, id)` hanya menghapus
+  berkas yang **masih** dimiliki dokumen itu
+- Poster lowongan -> dimiliki `lowongan/<id>` dan ditandai `publik=True`
+
+`publik=True` HANYA untuk berkas yang memang boleh dilihat siapa saja (poster).
+Endpoint `/api/publik/poster/{id}` memfilternya di query, jadi berkas lamaran
+tidak bisa terambil dari sana walau id-nya ditebak. Ini dijaga oleh
+`tests/test_http_publik.py`.

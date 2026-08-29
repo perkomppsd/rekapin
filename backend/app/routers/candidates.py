@@ -13,7 +13,8 @@ from .. import config, schema
 from ..db import db
 from ..models import BulkImportRequest, Candidate, CandidateCreate, CandidateUpdate
 from ..security import get_current_user
-from ..services import excel, history, listing, nik as nik_service, scope
+from ..services import (excel, files as files_service, history, listing,
+                       nik as nik_service, scope)
 from ..services.candidates import (assert_valid_birthdate, fill_missing_nik,
                                   fill_pic_email, from_import_row, prepare_new,
                                   split_by_nik)
@@ -196,6 +197,9 @@ async def delete_candidate(candidate_id: str, user: dict = Depends(get_current_u
         raise HTTPException(status_code=404, detail="Kandidat tidak ditemukan")
     scope.assert_can_delete(existing, user)
     await db.candidates.delete_one({"id": candidate_id})
+    # Dokumen pribadi (KTP, ijazah, SKCK) ikut dihapus dari server. Menyimpan
+    # scan identitas setelah datanya dihapus tidak bisa dibenarkan.
+    berkas_dihapus = await files_service.hapus_milik("kandidat", candidate_id)
     await history.log(candidate_id, existing.get("nama", ""), "deleted",
                       history.marker("_deleted", "Dihapus", old=existing.get("nama", "")), user)
-    return {"ok": True}
+    return {"ok": True, "berkas_dihapus": berkas_dihapus}
