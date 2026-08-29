@@ -49,8 +49,12 @@ export default function PortalLowongan() {
             data-testid={`lowongan-${job.slug}`}
             className={`${T.panel} block hover:border-indigo-500/40 transition-colors overflow-hidden`}>
             {job.poster && (
-              <img src={posterUrl(job.poster)} alt={`Poster ${job.judul}`}
-                className="w-full max-h-72 object-cover border-b border-slate-200 dark:border-slate-800" />
+              // Slot 4:5 potret — ukuran poster loker yang lazim, jadi semua
+              // kartu tingginya seragam walau posternya beda-beda.
+              <div className="aspect-[4/5] w-full bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+                <img src={posterUrl(job.poster)} alt={`Poster ${job.judul}`}
+                  loading="lazy" className="w-full h-full object-cover" />
+              </div>
             )}
             <div className="p-5">
             <div className="flex items-start justify-between gap-3">

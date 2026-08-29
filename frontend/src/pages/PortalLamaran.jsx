@@ -131,9 +131,18 @@ export default function PortalLamaran() {
       </Link>
 
       {job.poster && (
-        <div className={`${T.panel} overflow-hidden mb-6`}>
-          <img src={posterUrl(job.poster)} alt={`Poster ${job.judul}`}
-            className="w-full object-contain max-h-[70vh] bg-white dark:bg-slate-950" />
+        <div className="mb-6">
+          {/* Di detail poster ditampilkan UTUH (object-contain) supaya syarat
+              & jadwal di dalamnya terbaca, bukan dipotong seperti di kartu. */}
+          <a href={posterUrl(job.poster)} target="_blank" rel="noreferrer"
+            className={`${T.panel} block overflow-hidden max-w-sm mx-auto hover:border-indigo-500/40 transition-colors`}
+            title="Klik untuk membuka ukuran penuh">
+            <div className="aspect-[4/5] w-full bg-slate-100 dark:bg-slate-950">
+              <img src={posterUrl(job.poster)} alt={`Poster ${job.judul}`}
+                className="w-full h-full object-contain" />
+            </div>
+          </a>
+          <p className={`${T.hint} text-center mt-2`}>Klik poster untuk melihat ukuran penuh</p>
         </div>
       )}
 
