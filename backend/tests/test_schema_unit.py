@@ -824,3 +824,23 @@ def test_ratelimit_memblokir_setelah_batas():
 def test_status_lowongan_dan_lamaran_terdaftar():
     assert schema.STATUS_SETS["status_lowongan"] == ["Draft", "Aktif", "Tutup"]
     assert schema.STATUS_SETS["status_lamaran"] == ["Baru", "Diproses", "Diterima", "Ditolak"]
+
+
+def test_poster_lowongan_ikut_dikirim_ke_publik():
+    from app.services.jobs import PUBLIC_FIELDS
+    assert "poster" in PUBLIC_FIELDS
+
+
+def test_poster_hanya_menerima_gambar():
+    from app.services import files
+    assert files.GAMBAR_SAJA == (".jpg", ".png")
+    assert ".pdf" not in files.GAMBAR_SAJA, "poster tidak boleh PDF"
+
+
+def test_endpoint_publik_hanya_mengambil_berkas_bertanda_publik():
+    """Berkas lamaran (KTP/CV) tidak boleh terambil lewat endpoint poster,
+    walau id-nya ditebak. Filter publik=True ada di query, bukan dicek setelahnya."""
+    import inspect
+    from app.services import files
+    sumber = inspect.getsource(files.ambil_publik)
+    assert '"publik": True' in sumber

@@ -7,6 +7,7 @@ import { LogOut, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { BRAND, NAV_LINKS } from "@/config/navigation";
 import { iconFor } from "@/config/icons";
+import ThemeToggle from "@/components/ThemeToggle";
 import { T } from "@/config/theme";
 
 export default function AppHeader() {
@@ -22,7 +23,7 @@ export default function AppHeader() {
             <Users className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="font-display font-bold text-slate-50 leading-tight">{BRAND.name}</div>
+            <div className="font-display font-bold text-slate-900 dark:text-slate-50 leading-tight">{BRAND.name}</div>
             <div className="text-slate-500 text-[10px] tracking-[0.2em] uppercase">{BRAND.tagline}</div>
           </div>
         </div>
@@ -38,11 +39,12 @@ export default function AppHeader() {
             );
           })}
           <div className="hidden sm:block text-right">
-            <div className="text-slate-200 text-sm font-medium" data-testid="user-name">{user?.name}</div>
+            <div className="text-slate-800 dark:text-slate-200 text-sm font-medium" data-testid="user-name">{user?.name}</div>
             <div className="text-slate-500 text-xs" data-testid="user-email">
               {user?.email} · {user?.role}
             </div>
           </div>
+          <ThemeToggle />
           <Button variant="ghost" onClick={logout} data-testid="logout-button" className={T.btnGhost}>
             <LogOut className="w-4 h-4 mr-2" /> Keluar
           </Button>

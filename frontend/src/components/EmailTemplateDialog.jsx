@@ -50,11 +50,11 @@ export default function EmailTemplateDialog({ open, onOpenChange, candidate }) {
       <DialogContent className={`sm:max-w-lg ${T.dialog}`}>
         <DialogHeader>
           <DialogTitle className="font-display text-2xl flex items-center gap-2">
-            <Mail className="w-5 h-5 text-indigo-400" /> Kirim Email ke Kandidat
+            <Mail className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Kirim Email ke Kandidat
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Kirim email ke <span className="text-slate-200 font-medium">{candidate?.nama}</span>
-            {" "}({candidate?.email || <em className="text-rose-400">email kosong</em>}) menggunakan template siap pakai.
+          <DialogDescription className="text-slate-500 dark:text-slate-400">
+            Kirim email ke <span className="text-slate-800 dark:text-slate-200 font-medium">{candidate?.nama}</span>
+            {" "}({candidate?.email || <em className="text-rose-600 dark:text-rose-400">email kosong</em>}) menggunakan template siap pakai.
           </DialogDescription>
         </DialogHeader>
 

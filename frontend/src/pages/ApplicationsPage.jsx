@@ -40,7 +40,7 @@ function Baris({ label, nilai }) {
   return (
     <div className="flex gap-2 text-sm">
       <span className="text-slate-500 w-40 shrink-0">{label}</span>
-      <span className="text-slate-200 whitespace-pre-wrap break-words">{nilai}</span>
+      <span className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words">{nilai}</span>
     </div>
   );
 }
@@ -71,7 +71,7 @@ export default function ApplicationsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (user === null) return <div className="min-h-screen bg-slate-950" />;
+  if (user === null) return <div className="min-h-screen bg-white dark:bg-slate-950" />;
   if (!user) return <Navigate to="/login" replace />;
 
   const terima = async (lam) => {
@@ -134,14 +134,14 @@ export default function ApplicationsPage() {
 
       <div className={`${T.panelSubtle} overflow-hidden`}>
         {loading ? (
-          <div className="text-slate-400 text-sm text-center py-10">Memuat...</div>
+          <div className="text-slate-500 dark:text-slate-400 text-sm text-center py-10">Memuat...</div>
         ) : items.length === 0 ? (
           <div className="text-center py-14">
-            <Inbox className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-400">Tidak ada lamaran berstatus {filter}.</p>
+            <Inbox className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-slate-500 dark:text-slate-400">Tidak ada lamaran berstatus {filter}.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-slate-200 dark:divide-slate-800">
             {items.map((lam) => {
               const terbuka = buka === lam.id;
               const umur = ageFrom(lam.tanggal_lahir);
@@ -149,16 +149,16 @@ export default function ApplicationsPage() {
                 <li key={lam.id} data-testid={`row-lamaran-${lam.id}`}>
                   <button type="button"
                     onClick={() => { setBuka(terbuka ? null : lam.id); setCatatan(lam.catatan_admin || ""); }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-800/40 transition-colors">
+                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-slate-100 font-medium">{lam.nama}</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-medium">{lam.nama}</span>
                           <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] border ${tone(TONE_STATUS[lam.status] || "neutral", "pill")}`}>
                             {lam.status}
                           </span>
                           {lam.nik_sudah_terdaftar && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border border-amber-500/30 bg-amber-500/10 text-amber-300"
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
                               title="NIK ini sudah ada di data kandidat — periksa dulu sebelum menerima">
                               <AlertTriangle className="w-3 h-3" /> NIK sudah terdaftar
                             </span>
@@ -173,7 +173,7 @@ export default function ApplicationsPage() {
                   </button>
 
                   {terbuka && (
-                    <div className="px-4 pb-4 space-y-4 border-t border-slate-800/70 pt-4">
+                    <div className="px-4 pb-4 space-y-4 border-t border-slate-200 dark:border-slate-800/70 pt-4">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <div className={T.sectionLabel}>Data Pelamar</div>
@@ -196,12 +196,12 @@ export default function ApplicationsPage() {
                                 data-testid={`unduh-${key}-${lam.id}`}
                                 className={`${T.panel} px-3 py-2 flex items-center justify-between gap-2 text-left hover:border-indigo-500/40`}>
                                 <div className="min-w-0">
-                                  <div className="text-slate-200 text-sm">{b.kategori || key}</div>
+                                  <div className="text-slate-800 dark:text-slate-200 text-sm">{b.kategori || key}</div>
                                   <div className={`${T.hint} truncate`}>
                                     {b.nama_asli} · {(b.ukuran / 1024).toFixed(0)} KB
                                   </div>
                                 </div>
-                                <Download className="w-4 h-4 text-slate-400 shrink-0" />
+                                <Download className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                               </button>
                             ))}
                           </div>
@@ -242,7 +242,7 @@ export default function ApplicationsPage() {
                           </Link>
                         )}
                         <Button size="sm" variant="ghost" onClick={() => hapus(lam)}
-                          className="ml-auto text-rose-400 hover:text-rose-300 hover:bg-rose-500/10">
+                          className="ml-auto text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10">
                           <Trash2 className="w-4 h-4 mr-1" /> Hapus
                         </Button>
                       </div>

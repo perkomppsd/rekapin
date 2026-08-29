@@ -54,9 +54,9 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
       <DialogContent className={`sm:max-w-4xl ${T.dialog} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle className="font-display text-2xl flex items-center gap-2">
-            <ClipboardPaste className="w-5 h-5 text-indigo-400" /> Import Massal dari Google Sheets / Excel
+            <ClipboardPaste className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Import Massal dari Google Sheets / Excel
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-500 dark:text-slate-400">
             Salin data kandidat dari Google Forms / Google Sheets / Excel — lalu paste di kotak di bawah.
             Urutan kolom harus mengikuti panduan berikut. Baris pertama sebagai header opsional (otomatis dideteksi).
           </DialogDescription>
@@ -64,12 +64,12 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
 
         <div className="space-y-4">
           {/* Panduan urutan kolom */}
-          <div className="border border-slate-800 rounded-lg p-3 bg-slate-950/60">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-slate-100 dark:bg-slate-950/60">
             <div className={`${T.sectionLabel} mb-2`}>Urutan Kolom</div>
             <div className="flex flex-wrap gap-1.5">
               {columns.map((c, i) => (
                 <span key={c.key}
-                  className="text-xs px-2 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-indigo-200">
+                  className="text-xs px-2 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-200">
                   {i + 1}. {c.label}
                 </span>
               ))}
@@ -92,12 +92,12 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
           </div>
 
           {/* Preview */}
-          <div className="border border-slate-800 rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 bg-slate-950/60 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-slate-300 text-sm">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm">
                 <Rows className="w-4 h-4" /> Preview
               </div>
-              <div className="text-xs text-slate-400" data-testid="bulk-preview-count">
+              <div className="text-xs text-slate-500 dark:text-slate-400" data-testid="bulk-preview-count">
                 {rows.length} baris siap import
               </div>
             </div>
@@ -108,8 +108,8 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
                 </div>
               ) : (
                 <table className="w-full text-xs">
-                  <thead className="bg-slate-900/60">
-                    <tr className="text-slate-400">
+                  <thead className="bg-white dark:bg-slate-900/60">
+                    <tr className="text-slate-500 dark:text-slate-400">
                       <th className="text-left px-3 py-2 font-medium">#</th>
                       {columns.map((c) => (
                         <th key={c.key}
@@ -121,7 +121,7 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
                   </thead>
                   <tbody>
                     {rows.slice(0, PREVIEW_LIMIT).map((r, i) => (
-                      <tr key={i} className="border-t border-slate-800/70 text-slate-200">
+                      <tr key={i} className="border-t border-slate-200 dark:border-slate-800/70 text-slate-800 dark:text-slate-200">
                         <td className="px-3 py-1.5 text-slate-500">{i + 1}</td>
                         {columns.map((c) => (
                           <td key={c.key} className="px-3 py-1.5 whitespace-nowrap max-w-[180px] truncate">

@@ -52,7 +52,7 @@ export default function SettingsPage() {
   useEffect(() => { load(); }, [load]);
 
   if (user === null) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Memuat...</div>;
+    return <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center text-slate-500 dark:text-slate-400">Memuat...</div>;
   }
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
@@ -102,15 +102,15 @@ export default function SettingsPage() {
       ))}
 
       <div className="pt-2">
-        <div className="text-slate-100 font-medium">Kolom Kustom</div>
+        <div className="text-slate-900 dark:text-slate-100 font-medium">Kolom Kustom</div>
         <div className={T.hint}>
           Untuk kebutuhan yang belum ada kolomnya (misal: Sumber Info, Skala Gaji).
           Kolom akan otomatis muncul di form kandidat.
         </div>
       </div>
       <form onSubmit={create} className={`${T.panel} p-6 space-y-4`}>
-        <div className="flex items-center gap-2 text-slate-200 font-medium">
-          <Plus className="w-4 h-4 text-indigo-400" /> Tambah Kolom Baru
+        <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-medium">
+          <Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Tambah Kolom Baru
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
@@ -147,30 +147,30 @@ export default function SettingsPage() {
       </form>
 
       <div className={`${T.panelSubtle} overflow-hidden`}>
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center gap-2 text-slate-200">
-          <Columns3 className="w-4 h-4 text-indigo-400" /> Kolom Aktif
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-slate-800 dark:text-slate-200">
+          <Columns3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Kolom Aktif
         </div>
         {loading ? (
-          <div className="text-slate-400 text-sm text-center py-8">Memuat...</div>
+          <div className="text-slate-500 dark:text-slate-400 text-sm text-center py-8">Memuat...</div>
         ) : fields.length === 0 ? (
           <div className="text-slate-500 text-sm text-center py-12">
             Belum ada kolom kustom. Tambahkan lewat form di atas.
           </div>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-slate-200 dark:divide-slate-800">
             {fields.map((f) => (
               <li key={f.id} className="flex items-center justify-between px-4 py-3"
                 data-testid={`row-cf-${f.id}`}>
                 <div>
-                  <div className="text-slate-100 font-medium">{f.label}</div>
+                  <div className="text-slate-900 dark:text-slate-100 font-medium">{f.label}</div>
                   <div className="text-slate-500 text-xs">
-                    key: <span className="font-mono">{f.key}</span> · tipe: <span className="text-slate-300">{f.type}</span>
+                    key: <span className="font-mono">{f.key}</span> · tipe: <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{f.type}</span>
                     {f.type === "select" && f.options?.length ? <> · opsi: {f.options.join(", ")}</> : null}
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => doDelete(f)}
                   data-testid={`btn-delete-cf-${f.id}`}
-                  className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10">
+                  className="h-8 w-8 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </li>

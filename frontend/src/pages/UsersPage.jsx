@@ -50,7 +50,7 @@ export default function UsersPage() {
   useEffect(() => { load(); }, [load]);
 
   if (user === null) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Memuat...</div>;
+    return <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center text-slate-500 dark:text-slate-400">Memuat...</div>;
   }
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
@@ -92,8 +92,8 @@ export default function UsersPage() {
     >
       {/* Form tambah user */}
       <form onSubmit={create} className={`${T.panel} p-6 space-y-4`}>
-        <div className="flex items-center gap-2 text-slate-200 font-medium">
-          <UserPlus className="w-4 h-4 text-indigo-400" /> Tambah User
+        <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-medium">
+          <UserPlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Tambah User
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
@@ -133,17 +133,17 @@ export default function UsersPage() {
 
       {/* Daftar user */}
       <div className={`${T.panelSubtle} overflow-hidden`}>
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center gap-2 text-slate-200">
-          <UsersIcon className="w-4 h-4 text-indigo-400" /> Daftar User
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-slate-800 dark:text-slate-200">
+          <UsersIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Daftar User
         </div>
         {loading ? (
-          <div className="text-slate-400 text-sm text-center py-8">Memuat...</div>
+          <div className="text-slate-500 dark:text-slate-400 text-sm text-center py-8">Memuat...</div>
         ) : users.length === 0 ? (
           <div className="text-slate-500 text-sm text-center py-12">Belum ada user.</div>
         ) : (
           <Table>
-            <TableHeader className="bg-slate-900/70">
-              <TableRow className="border-slate-800 hover:bg-transparent">
+            <TableHeader className="bg-slate-100 dark:bg-slate-900/70">
+              <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
                 <TableHead className={T.th}>Nama</TableHead>
                 <TableHead className={T.th}>Email</TableHead>
                 <TableHead className={T.th}>Role</TableHead>
@@ -153,9 +153,9 @@ export default function UsersPage() {
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.id} data-testid={`row-user-${u.id}`}
-                  className="border-slate-800/70 hover:bg-slate-800/40">
-                  <TableCell className="text-slate-100 font-medium">{u.name}</TableCell>
-                  <TableCell className="text-slate-300">{u.email}</TableCell>
+                  className="border-slate-200 dark:border-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                  <TableCell className="text-slate-900 dark:text-slate-100 font-medium">{u.name}</TableCell>
+                  <TableCell className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{u.email}</TableCell>
                   <TableCell>
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${tone(ROLE_TONES[u.role] || "neutral", "pill")}`}>
                       {u.role}
@@ -167,7 +167,7 @@ export default function UsersPage() {
                     ) : (
                       <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(u)}
                         data-testid={`btn-delete-user-${u.id}`}
-                        className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10">
+                        className="h-8 w-8 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
@@ -183,8 +183,8 @@ export default function UsersPage() {
         <AlertDialogContent className={T.dialog}>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display">Hapus user?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              Akun <span className="text-slate-200 font-medium">{deleteTarget?.name}</span> akan dihapus.
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+              Akun <span className="text-slate-800 dark:text-slate-200 font-medium">{deleteTarget?.name}</span> akan dihapus.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -28,6 +28,8 @@ SIGNATURES: Tuple[Tuple[bytes, str, str], ...] = (
 )
 
 ALLOWED_LABEL = "PDF, JPG, atau PNG"
+GAMBAR_SAJA = (".jpg", ".png")
+GAMBAR_LABEL = "JPG atau PNG"
 
 
 def _sniff(head: bytes) -> Optional[Tuple[str, str]]:
@@ -37,8 +39,14 @@ def _sniff(head: bytes) -> Optional[Tuple[str, str]]:
     return None
 
 
-async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "") -> dict:
-    """Validasi & simpan satu berkas. Return metadata untuk disimpan di dokumen."""
+async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "",
+                 ekstensi_diizinkan: Optional[tuple] = None,
+                 publik: bool = False) -> dict:
+    """Validasi & simpan satu berkas. Return metadata untuk disimpan di dokumen.
+
+    publik=True HANYA untuk berkas yang memang boleh dilihat siapa saja
+    (mis. poster lowongan). Berkas lamaran tidak pernah memakai ini.
+    """
     isi = await upload.read()
     if not isi:
         raise HTTPException(status_code=400, detail=f"Berkas {kategori} kosong")
@@ -55,6 +63,11 @@ async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "") -> 
             detail=f"Berkas {kategori} harus berupa {ALLOWED_LABEL}",
         )
     ext, mime = jenis
+    if ekstensi_diizinkan and ext not in ekstensi_diizinkan:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Berkas {kategori} harus berupa {GAMBAR_LABEL}",
+        )
 
     file_id = uuid.uuid4().hex
     folder = config.UPLOAD_DIR / file_id[:2]
@@ -70,11 +83,27 @@ async def simpan(upload: UploadFile, *, kategori: str, keterangan: str = "") -> 
         "ukuran": len(isi),
         "path": str(path),
         "keterangan": keterangan,
+        "publik": publik,
         "created_at": now_iso(),
     }
     await db[COLLECTION].insert_one(dict(doc))
     doc.pop("_id", None)
     return {k: v for k, v in doc.items() if k != "path"}
+
+
+async def ambil_publik(file_id: str) -> Tuple[Path, dict]:
+    """Hanya berkas bertanda publik. Dipakai endpoint tanpa login (poster loker).
+
+    Sengaja query-nya menyertakan publik=True, bukan mengecek setelah ambil —
+    supaya berkas lamaran mustahil terambil dari sini walau id-nya ditebak.
+    """
+    doc = await db[COLLECTION].find_one({"id": file_id, "publik": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Berkas tidak ditemukan")
+    path = Path(doc["path"])
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="File sudah tidak ada di server")
+    return path, doc
 
 
 async def ambil(file_id: str) -> Tuple[Path, dict]:

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 
 from ..db import db
 from ..schema import STATUS_SETS
+from . import files
 from .common import now_iso, today_str
 
 COLLECTION = "job_postings"
@@ -17,7 +18,8 @@ DRAFT, AKTIF, TUTUP = "Draft", "Aktif", "Tutup"
 # Field yang boleh dilihat publik — sengaja daftar putih, bukan daftar hitam,
 # supaya field internal baru tidak ikut bocor tanpa sengaja.
 PUBLIC_FIELDS = ("slug", "judul", "jobdesk", "unit_usaha", "tipe_kerja",
-                 "deskripsi", "persyaratan", "kuota", "batas_lamaran", "created_at")
+                 "deskripsi", "persyaratan", "kuota", "batas_lamaran",
+                 "poster", "created_at")
 
 
 def _slugify(text: str) -> str:
@@ -78,6 +80,36 @@ async def ubah(job_id: str, payload: dict) -> dict:
     return await db[COLLECTION].find_one({"id": job_id}, {"_id": 0})
 
 
+async def set_poster(job_id: str, upload) -> dict:
+    """Ganti poster lowongan. Poster lama ikut dihapus dari disk."""
+    job = await db[COLLECTION].find_one({"id": job_id}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Lowongan tidak ditemukan")
+    berkas = await files.simpan(
+        upload, kategori="Poster lowongan",
+        ekstensi_diizinkan=files.GAMBAR_SAJA,
+        publik=True,          # poster memang untuk dilihat pelamar
+    )
+    lama = (job.get("poster") or {}).get("id")
+    await db[COLLECTION].update_one(
+        {"id": job_id}, {"$set": {"poster": berkas, "updated_at": now_iso()}})
+    if lama:
+        await files.hapus_banyak([lama])
+    return berkas
+
+
+async def hapus_poster(job_id: str) -> dict:
+    job = await db[COLLECTION].find_one({"id": job_id}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Lowongan tidak ditemukan")
+    lama = (job.get("poster") or {}).get("id")
+    await db[COLLECTION].update_one(
+        {"id": job_id}, {"$set": {"poster": None, "updated_at": now_iso()}})
+    if lama:
+        await files.hapus_banyak([lama])
+    return {"ok": True}
+
+
 async def hapus(job_id: str) -> dict:
     dipakai = await db.applications.count_documents({"job_id": job_id})
     if dipakai:
@@ -86,9 +118,12 @@ async def hapus(job_id: str) -> dict:
             detail=f"Lowongan ini sudah punya {dipakai} lamaran. "
                    f"Ubah statusnya jadi 'Tutup' saja, jangan dihapus.",
         )
+    job = await db[COLLECTION].find_one({"id": job_id}, {"_id": 0})
     hasil = await db[COLLECTION].delete_one({"id": job_id})
     if not hasil.deleted_count:
         raise HTTPException(status_code=404, detail="Lowongan tidak ditemukan")
+    if job and (job.get("poster") or {}).get("id"):
+        await files.hapus_banyak([job["poster"]["id"]])
     return {"ok": True}
 
 

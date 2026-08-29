@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { MetaProvider } from "@/context/MetaContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "sonner";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
@@ -31,8 +32,8 @@ function ProtectedRoute({ children }) {
   const { user } = useAuth();
   if (user === null) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Memuat sesi...</div>
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-500 dark:text-slate-400 text-sm">Memuat sesi...</div>
       </div>
     );
   }
@@ -43,6 +44,7 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <div className="App">
+      <ThemeProvider>
       <AuthProvider>
         <MetaProvider>
           <BrowserRouter>
@@ -61,13 +63,14 @@ function App() {
           </BrowserRouter>
           <Toaster
             position="top-right"
-            theme="dark"
+            theme="system"
             toastOptions={{
               classNames: { toast: T.toast },
             }}
           />
         </MetaProvider>
       </AuthProvider>
+      </ThemeProvider>
     </div>
   );
 }

@@ -2,11 +2,16 @@
   min-height: 100vh;
 }
 
+/* Header transparan berblur. Warnanya mengikuti tema (kelas `dark` di <html>). */
 .glass-nav {
-  background-color: rgb(2 6 23 / 0.72);
+  background-color: rgb(255 255 255 / 0.78);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgb(30 41 59);
+  border-bottom: 1px solid rgb(226 232 240);   /* slate-200 */
+}
+html.dark .glass-nav {
+  background-color: rgb(2 6 23 / 0.72);
+  border-bottom-color: rgb(30 41 59);          /* slate-800 */
 }
 
 .stat-card {

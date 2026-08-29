@@ -36,11 +36,11 @@ function adaTeksTersorot() {
 function NikCell({ value, tempPrefix }) {
   if (!value) return <span className="text-slate-500">—</span>;
   const sementara = tempPrefix && String(value).startsWith(tempPrefix);
-  if (!sementara) return <span className="text-slate-300 font-mono text-xs">{value}</span>;
+  if (!sementara) return <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 font-mono text-xs">{value}</span>;
   return (
     <span className="inline-flex items-center gap-1.5" title="NIK sementara — ganti kalau KTP sudah ada">
       <span className="text-slate-500 font-mono text-xs">{value}</span>
-      <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300">
+      <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
         sementara
       </span>
     </span>
@@ -65,7 +65,7 @@ function SortableHead({ column, label, sort, onSort }) {
           ? `Diurutkan ${sort.order === "asc" ? "naik" : "turun"} — klik untuk membalik`
           : "Klik untuk mengurutkan"}
         className={`w-full h-11 px-4 flex items-center gap-1.5 transition-colors
-          ${aktif ? "text-indigo-300" : "text-slate-400 hover:text-slate-200"}`}
+          ${aktif ? "text-indigo-700 dark:text-indigo-300" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
       >
         {label}
         <Icon className={`w-3 h-3 ${aktif ? "" : "opacity-40"}`} />
@@ -89,22 +89,22 @@ const ratingAverage = (row) => {
 
 // Cara menampilkan sel. Tambah tampilan baru: tambah satu entri di sini.
 const VARIANTS = {
-  primary: (v) => <span className="font-medium text-slate-50">{v || "—"}</span>,
-  text: (v) => <span className="text-slate-300">{v || "—"}</span>,
-  mutedXs: (v) => <span className="text-slate-300 text-xs">{v || "—"}</span>,
-  mono: (v) => <span className="text-slate-300 font-mono text-xs">{v || "—"}</span>,
+  primary: (v) => <span className="font-medium text-slate-900 dark:text-slate-50">{v || "—"}</span>,
+  text: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{v || "—"}</span>,
+  mutedXs: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-xs">{v || "—"}</span>,
+  mono: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 font-mono text-xs">{v || "—"}</span>,
   truncate: (v) => (
-    <span className="text-slate-400 text-xs max-w-[200px] truncate block" title={v || ""}>
+    <span className="text-slate-500 dark:text-slate-400 text-xs max-w-[200px] truncate block" title={v || ""}>
       {v || "—"}
     </span>
   ),
-  date: (v) => <span className="text-slate-400 text-xs">{formatDate(v)}</span>,
+  date: (v) => <span className="text-slate-500 dark:text-slate-400 text-xs">{formatDate(v)}</span>,
 };
 
 // Kolom khusus yang bukan field kandidat.
 const SPECIAL_CELLS = {
   __rating_avg: (row) => (
-    <span className="inline-flex items-center gap-1 text-amber-300 text-xs">★ {ratingAverage(row)}</span>
+    <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300 text-xs">★ {ratingAverage(row)}</span>
   ),
   __rating_stack: (row) => (
     <div className="flex flex-col gap-0.5">
@@ -117,7 +117,7 @@ const SPECIAL_CELLS = {
     const umur = displayAge(row);
     if (!umur) return <span className="text-slate-500">—</span>;
     return (
-      <span className="text-slate-300 tabular-nums"
+      <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 tabular-nums"
         title={umur.perkiraan
           ? "Usia lama yang tersimpan — isi tanggal lahir agar terhitung otomatis"
           : `Dihitung dari tanggal lahir ${row.tanggal_lahir}`}>
@@ -129,7 +129,7 @@ const SPECIAL_CELLS = {
   __blacklist_info: (row) => (
     <div className="max-w-[320px]">
       <StatusPill fieldKey="status_blacklist" value={row.status_blacklist} />
-      <div className="text-xs text-slate-300 mt-1 whitespace-pre-wrap break-words"
+      <div className="text-xs text-slate-400 dark:text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-wrap break-words"
         title={row.alasan_blacklist}>
         {row.alasan_blacklist || <span className="text-slate-500">Tidak ada alasan</span>}
       </div>
@@ -157,32 +157,32 @@ function RowActions({ row, onEdit, onDelete, onBlacklist, onShowHistory, onSendE
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" data-testid={`row-actions-${row.id}`}
-          className="h-8 w-8 text-slate-400 hover:text-slate-50 hover:bg-slate-800">
+          className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-100">
+      <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
         <DropdownMenuItem onClick={() => onEdit(row)} data-testid={`action-edit-${row.id}`}
-          className="focus:bg-slate-800 focus:text-slate-50">
+          className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
           <Pencil className="w-4 h-4 mr-2" /> Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onSendEmail && onSendEmail(row)}
-          data-testid={`action-email-${row.id}`} className="focus:bg-slate-800 focus:text-slate-50">
+          data-testid={`action-email-${row.id}`} className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
           <Mail className="w-4 h-4 mr-2" /> Kirim Email
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onShowHistory && onShowHistory(row)}
-          data-testid={`action-history-${row.id}`} className="focus:bg-slate-800 focus:text-slate-50">
+          data-testid={`action-history-${row.id}`} className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
           <History className="w-4 h-4 mr-2" /> Riwayat
         </DropdownMenuItem>
         {!alreadyBlacklisted && (
           <DropdownMenuItem onClick={() => onBlacklist(row)} data-testid={`action-blacklist-${row.id}`}
-            className="focus:bg-slate-800 focus:text-slate-50">
+            className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
             <Ban className="w-4 h-4 mr-2" /> Blacklist
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator className="bg-slate-800" />
+        <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-800" />
         <DropdownMenuItem onClick={() => onDelete(row)} data-testid={`action-delete-${row.id}`}
-          className="text-rose-400 focus:bg-rose-500/10 focus:text-rose-300">
+          className="text-rose-600 dark:text-rose-400 focus:bg-rose-500/10 focus:text-rose-300">
           <Trash2 className="w-4 h-4 mr-2" /> Hapus
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -198,10 +198,10 @@ export default function CandidateTable({
 
   if (!rows?.length) {
     return (
-      <div className="border border-dashed border-slate-800 rounded-xl py-16 text-center">
-        <p className="text-slate-400">Belum ada data kandidat.</p>
+      <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-xl py-16 text-center">
+        <p className="text-slate-500 dark:text-slate-400">Belum ada data kandidat.</p>
         <p className="text-slate-500 text-sm mt-1">
-          Klik <span className="text-indigo-400">Tambah Kandidat</span> untuk mulai.
+          Klik <span className="text-indigo-600 dark:text-indigo-400">Tambah Kandidat</span> untuk mulai.
         </p>
       </div>
     );
@@ -213,8 +213,8 @@ export default function CandidateTable({
     <div className={`${T.panelSubtle} overflow-hidden`}>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-slate-900/70 sticky top-0">
-            <TableRow className="border-slate-800 hover:bg-transparent">
+          <TableHeader className="bg-slate-100 dark:bg-slate-900/70 sticky top-0">
+            <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
               {columns.map((c) => (
                 <SortableHead key={c.key} column={c} sort={sort} onSort={onSort}
                   label={c.label || meta.labelOf(c.key)} />
@@ -237,7 +237,7 @@ export default function CandidateTable({
                     onEdit(row);
                   }
                 }}
-                className="border-slate-800/70 hover:bg-slate-800/40 data-row cursor-pointer
+                className="border-slate-200 dark:border-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800/40 data-row cursor-pointer
                   focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/60">
                 {columns.map((c) => (
                   <TableCell key={c.key}>

@@ -167,3 +167,11 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Penanda internal nik_sudah_terdaftar muncul di kotak lamaran untuk pemeriksa
 - Lowongan yang sudah punya lamaran tidak bisa dihapus (harus ditutup)
 - Unit test: 142 -> 156
+
+### v16 (poster lowongan + tema terang/gelap)
+- Poster/flyer lowongan bisa diunggah & diganti admin (JPG/PNG saja), tampil di kartu & detail portal publik
+- Berkas bertanda publik=True punya endpoint sendiri GET /api/publik/poster/{id} (tanpa login); berkas lamaran TIDAK pernah bertanda publik jadi tetap tertutup — diuji: KTP lewat endpoint poster -> 404
+- Ganti/hapus poster & hapus lowongan ikut membersihkan file lama dari disk
+- Tema terang/gelap: ThemeContext (kelas `dark` di <html>, disimpan di localStorage, default ikut setelan sistem) + tombol di semua header
+- Warna disapu jadi pasangan terang/gelap di 22 file + warna aksen disesuaikan agar terbaca di latar putih; glass-nav & tekstur noise punya versi per tema
+- Unit test: 156 -> 159

@@ -48,7 +48,7 @@ const RENDERERS = {
             <SelectItem key={o} value={o}>{o}</SelectItem>
           ))}
           {!options.length && !orphan && (
-            <div className="px-2 py-3 text-xs text-slate-400">
+            <div className="px-2 py-3 text-xs text-slate-500 dark:text-slate-400">
               Daftar masih kosong — isi dulu di halaman Setting.
             </div>
           )}
@@ -131,7 +131,7 @@ export default function FieldInput({ field, label, value, onChange, testid, read
     <div className={`space-y-1.5 ${field.span === 2 ? "md:col-span-2" : ""}`}>
       <Label className={T.label}>
         {label || field.label}
-        {field.required ? <span className="text-rose-400 ml-1">*</span> : null}
+        {field.required ? <span className="text-rose-600 dark:text-rose-400 ml-1">*</span> : null}
       </Label>
       <div className={showAction ? "flex items-center gap-2" : undefined}>
         <div className={showAction ? "flex-1 min-w-0" : undefined}>
@@ -144,7 +144,7 @@ export default function FieldInput({ field, label, value, onChange, testid, read
         )}
       </div>
       {dynamicHint
-        ? <p className="text-indigo-300 text-xs" data-testid={`hint-${field.key}`}>{dynamicHint}</p>
+        ? <p className="text-indigo-700 dark:text-indigo-300 text-xs" data-testid={`hint-${field.key}`}>{dynamicHint}</p>
         : field.hint ? <p className={T.hint}>{field.hint}</p> : null}
     </div>
   );

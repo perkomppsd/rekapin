@@ -12,6 +12,7 @@ Prinsip yang dijaga di sini:
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 
 from .. import config
 from ..schema import STATUS_SETS
@@ -30,6 +31,18 @@ async def daftar_lowongan():
 @router.get("/lowongan/{slug}")
 async def detail_lowongan(slug: str):
     return jobs.publik(await jobs.ambil_publik(slug))
+
+
+@router.get("/poster/{file_id}")
+async def poster(file_id: str):
+    """Poster lowongan — satu-satunya berkas yang boleh dilihat tanpa login.
+
+    Hanya berkas bertanda publik=True yang bisa diambil dari sini, jadi berkas
+    lamaran (CV/KTP) tetap tertutup walau id-nya ditebak.
+    """
+    path, meta = await files.ambil_publik(file_id)
+    return FileResponse(path, media_type=meta["mime"],
+                        headers={"Cache-Control": "public, max-age=3600"})
 
 
 @router.get("/form-lamaran")

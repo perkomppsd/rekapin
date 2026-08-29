@@ -107,12 +107,12 @@ export default function ReferenceListManager({ list }) {
 
   return (
     <div className={`${T.panelSubtle} overflow-hidden`} data-testid={`ref-${list.key}`}>
-      <div className="px-4 py-3 border-b border-slate-800">
-        <div className="text-slate-100 font-medium">{list.label}</div>
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="text-slate-900 dark:text-slate-100 font-medium">{list.label}</div>
         <div className={T.hint}>{list.description}</div>
       </div>
 
-      <form onSubmit={create} className="p-4 border-b border-slate-800 space-y-3">
+      <form onSubmit={create} className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className={T.label}>Nama {list.singular}</Label>
@@ -135,13 +135,13 @@ export default function ReferenceListManager({ list }) {
       </form>
 
       {loading ? (
-        <div className="text-slate-400 text-sm text-center py-8">Memuat...</div>
+        <div className="text-slate-500 dark:text-slate-400 text-sm text-center py-8">Memuat...</div>
       ) : items.length === 0 ? (
         <div className="text-slate-500 text-sm text-center py-10">
           Belum ada {list.singular.toLowerCase()}. Tambahkan lewat form di atas.
         </div>
       ) : (
-        <ul className="divide-y divide-slate-800">
+        <ul className="divide-y divide-slate-200 dark:divide-slate-800">
           {items.map((it) => (
             <li key={it.id} className="px-4 py-3" data-testid={`row-${list.key}-${it.id}`}>
               {editing?.id === it.id ? (
@@ -171,9 +171,9 @@ export default function ReferenceListManager({ list }) {
               ) : (
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-slate-100 font-medium">{it.nama}</div>
+                    <div className="text-slate-900 dark:text-slate-100 font-medium">{it.nama}</div>
                     {it.keterangan ? (
-                      <div className="text-slate-400 text-xs mt-0.5 whitespace-pre-wrap break-words">
+                      <div className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 whitespace-pre-wrap break-words">
                         {it.keterangan}
                       </div>
                     ) : null}
@@ -187,13 +187,13 @@ export default function ReferenceListManager({ list }) {
                       onClick={() => setEditing({
                         id: it.id, nama: it.nama, keterangan: it.keterangan || "",
                       })}
-                      className="h-8 w-8 text-slate-400 hover:text-slate-50 hover:bg-slate-800">
+                      className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800">
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon"
                       data-testid={`btn-delete-${list.key}-${it.id}`}
                       onClick={() => setDeleteTarget(it)}
-                      className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10">
+                      className="h-8 w-8 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -210,11 +210,11 @@ export default function ReferenceListManager({ list }) {
             <AlertDialogTitle className="font-display">
               Hapus {list.singular.toLowerCase()}?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              <span className="text-slate-200 font-medium">{deleteTarget?.nama}</span> akan
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+              <span className="text-slate-800 dark:text-slate-200 font-medium">{deleteTarget?.nama}</span> akan
               hilang dari pilihan dropdown.
               {deleteTarget?.dipakai ? (
-                <> Saat ini masih dipakai <span className="text-amber-300">
+                <> Saat ini masih dipakai <span className="text-amber-700 dark:text-amber-300">
                   {deleteTarget.dipakai} data kandidat</span> — data itu tidak diubah,
                   nilainya tetap tersimpan sebagai catatan.</>
               ) : null}

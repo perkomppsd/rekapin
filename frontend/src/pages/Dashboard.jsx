@@ -80,7 +80,7 @@ function StatCard({ icon: Icon, label, value, toneName = "indigo", testid }) {
         <div className="min-w-0">
           <div className="text-slate-500 text-[10px] tracking-[0.2em] uppercase truncate"
             title={label}>{label}</div>
-          <div className="font-display text-2xl font-bold text-slate-50 mt-1">{value}</div>
+          <div className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50 mt-1">{value}</div>
         </div>
         <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${tone(toneName, "card")}`}>
           <Icon className="w-4 h-4" />
@@ -308,8 +308,8 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 mb-3">
-              <Sparkles className="w-3 h-3 text-indigo-300" />
-              <span className="text-indigo-200 text-[10px] tracking-[0.2em] uppercase">Master Data Otomatis</span>
+              <Sparkles className="w-3 h-3 text-indigo-700 dark:text-indigo-300" />
+              <span className="text-indigo-700 dark:text-indigo-200 text-[10px] tracking-[0.2em] uppercase">Master Data Otomatis</span>
             </div>
             <h1 className={T.title}>Dashboard Recruitment</h1>
             <p className={T.subtitle}>
@@ -368,12 +368,12 @@ export default function Dashboard() {
         {/* Filter & tabel */}
         <div className="space-y-4">
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="h-auto bg-slate-900/60 border border-slate-800 p-1 rounded-full flex flex-wrap gap-1">
+            <TabsList className="h-auto bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-1 rounded-full flex flex-wrap gap-1">
               {tabs.map((t) => {
                 const Icon = iconFor(t.icon);
                 return (
                   <TabsTrigger key={t.key} value={t.key} data-testid={`tab-${t.key}`}
-                    className="rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-400 px-4 py-2 text-sm gap-2">
+                    className="rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-500 dark:text-slate-400 px-4 py-2 text-sm gap-2">
                     <Icon className="w-3.5 h-3.5" />
                     {t.label}
                   </TabsTrigger>
@@ -390,7 +390,7 @@ export default function Dashboard() {
                   className={`pl-9 ${T.inputLight}`} />
               </div>
               <Select value={posFilter} onValueChange={setPosFilter}>
-                <SelectTrigger className="bg-slate-900 border-slate-800 text-slate-50" data-testid="filter-position">
+                <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-50" data-testid="filter-position">
                   <SelectValue placeholder="Filter posisi apply" />
                 </SelectTrigger>
                 <SelectContent className={T.selectContent}>
@@ -411,7 +411,7 @@ export default function Dashboard() {
                   <Button type="button" size="icon" variant="ghost"
                     onClick={() => { setDateFrom(""); setDateTo(""); }}
                     data-testid="btn-clear-date"
-                    className="text-slate-400 hover:text-slate-50 hover:bg-slate-800 h-9 w-9 shrink-0">
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 w-9 shrink-0">
                     <X className="w-4 h-4" />
                   </Button>
                 )}
@@ -425,7 +425,7 @@ export default function Dashboard() {
             {tabs.map((t) => (
               <TabsContent key={t.key} value={t.key} className="mt-4">
                 {loading ? (
-                  <div className="border border-slate-800 rounded-xl py-16 text-center text-slate-400">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl py-16 text-center text-slate-500 dark:text-slate-400">
                     Memuat data...
                   </div>
                 ) : (
@@ -460,8 +460,8 @@ export default function Dashboard() {
         <AlertDialogContent className={T.dialog}>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display">Hapus kandidat?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              Data <span className="text-slate-200 font-medium">{deleteTarget?.nama}</span> akan dihapus permanen.
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+              Data <span className="text-slate-800 dark:text-slate-200 font-medium">{deleteTarget?.nama}</span> akan dihapus permanen.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -4,6 +4,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Users } from "lucide-react";
 import { BRAND } from "@/config/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 import { T } from "@/config/theme";
 
 export default function PortalShell({ children }) {
@@ -16,11 +17,16 @@ export default function PortalShell({ children }) {
               <Users className="w-4 h-4 text-white" />
             </div>
             <div>
-              <div className="font-display font-bold text-slate-50 leading-tight">{BRAND.name}</div>
+              <div className="font-display font-bold text-slate-900 dark:text-slate-50 leading-tight">{BRAND.name}</div>
               <div className="text-slate-500 text-[10px] tracking-[0.2em] uppercase">Karier</div>
             </div>
           </Link>
-          <Link to="/login" className={`${T.hint} hover:text-slate-300`}>Masuk sebagai HR</Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link to="/login" className={`${T.hint} hover:text-slate-600 dark:hover:text-slate-300`}>
+              Masuk sebagai HR
+            </Link>
+          </div>
         </div>
       </header>
       <main className={`${T.containerNarrow} py-10`}>{children}</main>

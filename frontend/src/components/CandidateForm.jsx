@@ -35,7 +35,7 @@ function Warning({ text }) {
   // Teks memakai **tebal** sederhana.
   const parts = String(text).split("**");
   return (
-    <div className="md:col-span-2 flex items-start gap-2 p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-200 text-sm">
+    <div className="md:col-span-2 flex items-start gap-2 p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-200 text-sm">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <div>{parts.map((p, i) => (i % 2 ? <strong key={i}>{p}</strong> : p))}</div>
     </div>
@@ -100,14 +100,14 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
           <DialogTitle className="font-display text-2xl">
             {initial ? "Edit Kandidat" : "Tambah Kandidat"}
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-500 dark:text-slate-400">
             Isi data di sini. Perubahan status otomatis muncul di tab terkait & tercatat di riwayat.
           </DialogDescription>
         </DialogHeader>
 
         {meta.status === "error" ? (
           <div className="py-10 text-center space-y-3">
-            <p className="text-slate-300 text-sm">Gagal memuat konfigurasi form.</p>
+            <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm">Gagal memuat konfigurasi form.</p>
             <Button type="button" onClick={meta.reload} className={T.btnPrimary}>Coba lagi</Button>
           </div>
         ) : (

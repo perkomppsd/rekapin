@@ -23,6 +23,12 @@ api.interceptors.request.use((config) => {
 
 // Ubah error axios apa pun jadi satu pesan yang bisa dibaca user.
 // Pakai ini di semua catch block supaya pesan error konsisten di seluruh app.
+// Poster lowongan boleh dilihat tanpa login (berkas lamaran TIDAK — itu lewat
+// /berkas/{id} yang butuh token).
+export const posterUrl = (poster) =>
+  poster?.id ? `${API}/publik/poster/${poster.id}` : null;
+
+
 export function describeApiError(error, fallback = "Terjadi kesalahan. Coba lagi.") {
   // Tidak ada response = request tidak sampai ke server (backend mati / CORS / offline).
   if (error && !error.response) {
