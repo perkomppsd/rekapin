@@ -83,3 +83,4 @@ android-sdk/
 # Local dev
 .archive/
 backend/.venv/
+frontend/build/
