@@ -54,6 +54,18 @@ def email_enabled() -> bool:
 HIRE_NOTIFY_EMAIL = os.environ.get("HASAN_EMAIL", "hasan@company.com").strip().lower()
 HIRE_NOTIFY_NAME = os.environ.get("HASAN_NAME", "Hasan")
 
+# ---------- Berkas lamaran ----------
+# Disimpan di folder ini (bukan di dalam static) supaya TIDAK bisa diakses
+# publik lewat URL — hanya lewat endpoint /api/berkas/{id} yang cek login.
+UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", BACKEND_DIR / "uploads"))
+MAX_FILE_MB = int(os.environ.get("MAX_FILE_MB", "5"))
+MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
+
+# Batas lamaran publik per IP (anti-spam sederhana).
+PUBLIC_RATE_LIMIT = int(os.environ.get("PUBLIC_RATE_LIMIT", "5"))
+PUBLIC_RATE_WINDOW_MINUTES = int(os.environ.get("PUBLIC_RATE_WINDOW_MINUTES", "60"))
+
+
 # ---------- Aturan bisnis ----------
 TRAINING_PERIOD_DAYS = 90          # masa training (3 bulan)
 CONTRACT_PERIOD_DAYS = 180         # masa kontrak kerja (6 bulan)

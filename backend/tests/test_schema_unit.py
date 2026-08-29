@@ -748,3 +748,79 @@ def test_semua_sort_menunjuk_field_yang_ada():
             {k for k, _ in schema.SYSTEM_FIELDS}
     for spec in schema.SORTS.values():
         assert spec.field in boleh, f"sort '{spec.key}' menunjuk field '{spec.field}'"
+
+
+# ---------------------------------------------------------------------------
+# Portal lowongan & lamaran
+# ---------------------------------------------------------------------------
+def test_field_baru_untuk_form_lamaran_ada():
+    for key in ("domisili", "status_pernikahan", "pendidikan_terakhir", "pengalaman_kerja"):
+        assert key in schema.FIELD_BY_KEY, key
+    assert schema.FIELD_BY_KEY["status_pernikahan"].options == "pernikahan"
+    assert schema.FIELD_BY_KEY["pendidikan_terakhir"].options == "pendidikan"
+
+
+def test_field_lamaran_ikut_export_dan_riwayat():
+    keys = {k for k, _ in schema.EXPORT_COLUMNS}
+    for key in ("domisili", "status_pernikahan", "pendidikan_terakhir", "pengalaman_kerja"):
+        assert key in keys and key in schema.FIELD_LABELS, key
+
+
+def test_semua_field_pelamar_ada_di_schema_kandidat():
+    """Data lamaran disalin ke kandidat saat diterima — kalau ada field yang
+    tidak dikenal schema, datanya akan hilang diam-diam."""
+    from app.services.applications import FIELD_PELAMAR
+    for key in FIELD_PELAMAR:
+        assert key in schema.FIELD_BY_KEY, f"field pelamar '{key}' tidak ada di schema kandidat"
+
+
+def test_lowongan_publik_hanya_membuka_field_yang_aman():
+    from app.services.jobs import PUBLIC_FIELDS
+    bocor = {"id", "created_by", "created_by_nama", "status", "updated_at"}
+    assert not (set(PUBLIC_FIELDS) & bocor), "field internal ikut terkirim ke publik"
+
+
+def test_berkas_lamaran_lengkap():
+    from app.services.applications import BERKAS
+    keys = {k for k, _l, _w in BERKAS}
+    assert keys == {"cv", "ijazah", "skck", "pas_foto", "ktp"}
+    wajib = {k for k, _l, w in BERKAS if w}
+    assert "skck" not in wajib, "SKCK sengaja opsional"
+    assert {"cv", "ijazah", "pas_foto", "ktp"} <= wajib
+
+
+@pytest.mark.parametrize("isi,diterima", [
+    (b"%PDF-1.4 ...", True),
+    (b"\xff\xd8\xff\xe0 jpeg", True),
+    (b"\x89PNG\r\n\x1a\n", True),
+    (b"ini teks biasa", False),
+    (b"MZ\x90\x00 executable", False),          # .exe
+    (b"PK\x03\x04 zip", False),
+    (b"", False),
+])
+def test_tipe_berkas_dikenali_dari_isi_bukan_nama(isi, diterima):
+    from app.services.files import _sniff
+    assert (_sniff(isi[:16]) is not None) is diterima
+
+
+def test_ratelimit_memblokir_setelah_batas():
+    from app.services import ratelimit
+
+    class FakeReq:
+        headers = {}
+        class client:
+            host = "10.0.0.1"
+
+    ratelimit.reset()
+    req = FakeReq()
+    for _ in range(3):
+        ratelimit.check(req, limit=3, window_minutes=60)
+    with pytest.raises(Exception) as err:
+        ratelimit.check(req, limit=3, window_minutes=60)
+    assert "Terlalu banyak" in str(err.value.detail)
+    ratelimit.reset()
+
+
+def test_status_lowongan_dan_lamaran_terdaftar():
+    assert schema.STATUS_SETS["status_lowongan"] == ["Draft", "Aktif", "Tutup"]
+    assert schema.STATUS_SETS["status_lamaran"] == ["Baru", "Diproses", "Diterima", "Ditolak"]

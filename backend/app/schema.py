@@ -119,6 +119,11 @@ STATUS_SETS: Dict[str, List[str]] = {
                   Blacklist.RESIGNED_AFTER_KONTRAK, Blacklist.NO_SHOW,
                   Blacklist.VIOLATION, Blacklist.OTHER],
     "role": ["admin", "recruiter"],
+    "pernikahan": ["Belum Menikah", "Menikah", "Cerai Hidup", "Cerai Mati"],
+    "pendidikan": ["SD", "SMP", "SMA/SMK", "D1", "D2", "D3", "D4/S1", "S2", "S3"],
+    "tipe_kerja": ["Full Time", "Part Time", "Kontrak", "Magang", "Harian"],
+    "status_lowongan": ["Draft", "Aktif", "Tutup"],
+    "status_lamaran": ["Baru", "Diproses", "Diterima", "Ditolak"],
 }
 
 # ---------------------------------------------------------------------------
@@ -191,6 +196,14 @@ FIELDS: Tuple[FieldSpec, ...] = (
               aliases=("email address",), paste_index=1),
     FieldSpec("alamat", "Alamat", type="textarea", group="pribadi", span=2,
               aliases=("address",), paste_index=6),
+    FieldSpec("domisili", "Domisili", group="pribadi",
+              hint="Kota/kabupaten tempat tinggal sekarang kalau beda dengan KTP",
+              aliases=("kota domisili", "tempat tinggal")),
+    FieldSpec("status_pernikahan", "Status Pernikahan", type="select", group="pribadi",
+              options="pernikahan", aliases=("status nikah", "perkawinan")),
+    FieldSpec("pendidikan_terakhir", "Pendidikan Terakhir", type="select",
+              group="pribadi", options="pendidikan",
+              aliases=("pendidikan", "pendidikan akhir")),
     FieldSpec("no_hp", "No HP", group="pribadi", searchable=True,
               aliases=("no hp", "no. hp", "phone", "telepon"), paste_index=2),
     # Tanggal lahir menggantikan kolom "usia": umur dihitung otomatis supaya
@@ -264,6 +277,9 @@ FIELDS: Tuple[FieldSpec, ...] = (
     FieldSpec("nilai_kedisiplinan", "Nilai Kedisiplinan", type="rating", group="penilaian", default=0),
 
     # --- Catatan & PIC ---
+    FieldSpec("pengalaman_kerja", "Pengalaman Kerja", type="textarea", group="catatan",
+              span=2, placeholder="Perusahaan, posisi, dan lama bekerja",
+              aliases=("pengalaman", "riwayat kerja")),
     FieldSpec("keterangan", "Keterangan", type="textarea", group="catatan", span=2,
               aliases=("catatan", "notes"), paste_index=9),
     # PIC dipilih dari daftar user, bukan diketik: email-nya menentukan hak akses,

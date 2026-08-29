@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,6 +132,14 @@ export default function Login() {
 
           <div className="text-center text-xs text-slate-500">
             Aman & terenkripsi · JWT + bcrypt
+          </div>
+
+          <div className="text-center text-xs text-slate-500">
+            Mencari lowongan?{" "}
+            <Link to="/lowongan" className="text-indigo-400 hover:text-indigo-300"
+              data-testid="link-portal-karier">
+              Lihat portal karier
+            </Link>
           </div>
         </form>
       </div>

@@ -101,6 +101,35 @@ class UserUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 # Kolom kustom (dibuat admin lewat halaman Setting)
 # ---------------------------------------------------------------------------
+class JobPostingCreate(BaseModel):
+    judul: str
+    jobdesk: Optional[str] = ""
+    unit_usaha: Optional[str] = ""
+    tipe_kerja: Optional[str] = "Full Time"
+    deskripsi: Optional[str] = ""
+    persyaratan: Optional[str] = ""
+    kuota: Optional[int] = None
+    batas_lamaran: Optional[str] = ""       # YYYY-MM-DD, kosong = tanpa batas
+    status: Optional[str] = "Draft"         # Draft | Aktif | Tutup
+
+
+class JobPostingUpdate(BaseModel):
+    judul: Optional[str] = None
+    jobdesk: Optional[str] = None
+    unit_usaha: Optional[str] = None
+    tipe_kerja: Optional[str] = None
+    deskripsi: Optional[str] = None
+    persyaratan: Optional[str] = None
+    kuota: Optional[int] = None
+    batas_lamaran: Optional[str] = None
+    status: Optional[str] = None
+
+
+class ApplicationDecision(BaseModel):
+    status: str                              # Baru | Diproses | Diterima | Ditolak
+    catatan: Optional[str] = ""
+
+
 class ReferenceItemCreate(BaseModel):
     nama: str
     keterangan: Optional[str] = ""

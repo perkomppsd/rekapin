@@ -28,6 +28,12 @@ INDEXES = (
     ("candidate_history", "changed_at", False),
     ("custom_fields", "key", True),
     ("reference_items", "list", False),
+    ("job_postings", "slug", True),
+    ("job_postings", "status", False),
+    ("applications", "status", False),
+    ("applications", "created_at", False),
+    ("applications", "nik", False),
+    ("files", "id", True),
 )
 
 

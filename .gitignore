@@ -90,3 +90,4 @@ android-sdk/
 .archive/
 backend/.venv/
 frontend/build/
+backend/uploads/

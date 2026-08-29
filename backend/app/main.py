@@ -12,8 +12,8 @@ from fastapi import APIRouter, FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from . import config, db
-from .routers import (auth, candidates, cron, custom_fields, email, export,
-                      history, meta, references, users)
+from .routers import (applications, auth, candidates, cron, custom_fields, email,
+                      export, history, jobs, meta, public, references, users)
 from .security import hash_password, verify_password
 from .services.common import now_iso
 
@@ -35,6 +35,9 @@ ROUTERS = (
     users.router,
     custom_fields.router,
     references.router,
+    jobs.router,
+    applications.router,
+    public.router,
     meta.router,
     export.router,
     history.router,

@@ -8,6 +8,10 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
+import JobsPage from "@/pages/JobsPage";
+import ApplicationsPage from "@/pages/ApplicationsPage";
+import PortalLowongan from "@/pages/PortalLowongan";
+import PortalLamaran from "@/pages/PortalLamaran";
 import { T } from "@/config/theme";
 
 // Daftar halaman. Tambah halaman baru = tambah satu entri
@@ -16,6 +20,11 @@ const ROUTES = [
   { path: "/dashboard", element: <Dashboard />, protected: true },
   { path: "/users", element: <UsersPage />, protected: true },
   { path: "/settings", element: <SettingsPage />, protected: true },
+  { path: "/kelola-lowongan", element: <JobsPage />, protected: true },
+  { path: "/lamaran", element: <ApplicationsPage />, protected: true },
+  // Portal karier: sengaja TANPA proteksi, ini halaman untuk pelamar umum.
+  { path: "/lowongan", element: <PortalLowongan />, protected: false },
+  { path: "/lowongan/:slug", element: <PortalLamaran />, protected: false },
 ];
 
 function ProtectedRoute({ children }) {

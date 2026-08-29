@@ -155,3 +155,15 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - Klik baris tabel = buka form edit (tidak terpicu saat menyorot teks / klik menu aksi); bisa lewat Enter/Space
 - Urutan dropdown metode interview: Offline sebelum Online
 - Unit test: 141 -> 142
+
+### v15 (portal lowongan & lamaran mandiri)
+- Portal karier PUBLIK (tanpa login): /lowongan (daftar) & /lowongan/:slug (detail + form lamaran)
+- Admin bisa memasang lowongan: judul, jobdesk, unit usaha, tipe kerja, kuota, batas lamaran, deskripsi, persyaratan; status Draft/Aktif/Tutup (hanya Aktif & belum lewat batas yang tampil publik)
+- Form lamaran: nama, NIK, HP, email, tanggal lahir (umur dihitung), alamat KTP, domisili, status pernikahan, pendidikan terakhir, pengalaman kerja
+- Upload berkas: CV, ijazah, pas foto, KTP (wajib) + SKCK (opsional)
+- Field kandidat baru: domisili, status_pernikahan, pendidikan_terakhir, pengalaman_kerja
+- Alur: lamaran masuk kotak "Lamaran Masuk" (Baru) -> admin periksa -> Terima (jadi kandidat + berkas ikut) / Tolak
+- KEAMANAN: berkas TIDAK bisa diakses lewat URL publik (hanya GET /api/berkas/{id} yang cek login); tipe file diperiksa dari magic bytes bukan nama/header; batas 5MB per berkas; rate limit 5 lamaran/jam per IP; balasan ke pelamar seragam sehingga status blacklist/NIK terdaftar tidak bocor ke luar
+- Penanda internal nik_sudah_terdaftar muncul di kotak lamaran untuk pemeriksa
+- Lowongan yang sudah punya lamaran tidak bisa dihapus (harus ditutup)
+- Unit test: 142 -> 156
