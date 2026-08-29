@@ -28,7 +28,7 @@ export default function FunnelChart({ stages = [] }) {
             <div key={s.key} data-testid={`funnel-stage-${s.key}`}>
               <div className="flex items-center justify-between text-sm mb-0.5 gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 dark:text-slate-300 text-[10px] flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] flex items-center justify-center shrink-0">{i + 1}</span>
                   <span className="text-slate-900 dark:text-slate-100 font-medium truncate">{s.label}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

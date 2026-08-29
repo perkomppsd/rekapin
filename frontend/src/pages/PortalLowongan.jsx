@@ -34,11 +34,11 @@ export default function PortalLowongan() {
 
       {status === "loading" && <div className="text-slate-500 dark:text-slate-400 py-12 text-center">Memuat lowongan...</div>}
       {status === "error" && (
-        <div className={`${T.panelSubtle} p-8 text-center text-slate-400 dark:text-slate-600 dark:text-slate-300`}>{pesan}</div>
+        <div className={`${T.panelSubtle} p-8 text-center text-slate-600 dark:text-slate-300`}>{pesan}</div>
       )}
       {status === "ready" && items.length === 0 && (
         <div className={`${T.panelSubtle} p-12 text-center`}>
-          <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300">Belum ada lowongan yang dibuka saat ini.</p>
+          <p className="text-slate-600 dark:text-slate-300">Belum ada lowongan yang dibuka saat ini.</p>
           <p className={`${T.hint} mt-1`}>Silakan cek kembali beberapa waktu lagi.</p>
         </div>
       )}

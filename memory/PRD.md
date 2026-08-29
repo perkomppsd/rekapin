@@ -184,3 +184,15 @@ App to simplify recruitment data recap. Master Data → auto-filtered to Intervi
 - ratelimit.py dipisah jadi ensure()/record() + namespace, jadi hitungan login & lamaran publik tidak bercampur
 - Test HTTP baru tests/test_http_publik.py (20 test): endpoint internal wajib login, field internal tidak bocor, lowongan Draft tersembunyi, balasan lamaran seragam, KTP tidak bisa diambil lewat endpoint poster, siklus hidup berkas, rate limit login
 - Unit test: 159 -> 182
+
+### v18 (login Google)
+- Login staf HR memakai akun Google (Google Identity Services). Verifikasi ID token di backend pakai kunci publik Google (JWKS) — tidak perlu client secret
+- Yang diperiksa: tanda tangan, aud (client id), iss, exp, email_verified. Semua diuji dengan kunci RSA buatan sendiri di tests/test_google_auth.py
+- Google hanya membuktikan IDENTITAS; izin masuk tetap dari daftar user aplikasi (email belum terdaftar -> 403)
+- Login password DIMATIKAN secara default (PASSWORD_LOGIN=false); endpoint /auth/login balas 403 dengan arahan pakai Google
+- GET /auth/config (publik) memberi tahu frontend cara login yang aktif; halaman login menyesuaikan sendiri
+- Rate limit login berlaku juga untuk jalur Google (email tak terdaftar dihitung sebagai kegagalan)
+- JALUR DARURAT: backend/scripts/akses_darurat.py (lihat kondisi, daftar user, jadikan admin, set password) + PASSWORD_LOGIN=true sementara. Didokumentasikan di docs/PANDUAN_MODIFIKASI.md
+- CATATAN: .env lokal masih PASSWORD_LOGIN=true karena GOOGLE_CLIENT_ID belum diisi; ubah ke false setelah login Google terbukti jalan
+- FIX: sapuan tema sebelumnya menghasilkan kelas ganda (mis. "text-slate-400 dark:text-slate-600 dark:text-slate-300") di 13 file — diperbaiki
+- Unit test: 182 -> 194

@@ -24,7 +24,7 @@ function ActionBadge({ action }) {
     updated: { cls: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20", icon: RefreshCw, label: "Diubah" },
     deleted: { cls: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20", icon: Trash2, label: "Dihapus" },
     imported: { cls: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20", icon: Upload, label: "Diimport" },
-  }[action] || { cls: "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700", icon: History, label: action };
+  }[action] || { cls: "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700", icon: History, label: action };
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${cfg.cls}`}>
@@ -36,10 +36,10 @@ function ActionBadge({ action }) {
 function ChangeRow({ change }) {
   if (!change) return null;
   if (change.field?.startsWith("_")) {
-    return <div className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm">{change.label}: <span className="text-slate-900 dark:text-slate-100">{change.new || change.old || "—"}</span></div>;
+    return <div className="text-slate-600 dark:text-slate-300 text-sm">{change.label}: <span className="text-slate-900 dark:text-slate-100">{change.new || change.old || "—"}</span></div>;
   }
   return (
-    <div className="text-sm flex flex-wrap items-center gap-2 text-slate-400 dark:text-slate-600 dark:text-slate-300">
+    <div className="text-sm flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
       <span className="text-slate-500">{change.label}:</span>
       <span className="line-through text-slate-500 max-w-[280px] truncate">{String(change.old || "—")}</span>
       <ArrowRight className="w-3 h-3 text-slate-500" />

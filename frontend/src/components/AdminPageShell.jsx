@@ -13,7 +13,7 @@ export default function AdminPageShell({ title, description, badge, badgeIcon, c
     <div className={T.page}>
       <header className={T.nav}>
         <div className={`${T.containerNarrow} h-16 flex items-center justify-between`}>
-          <Link to="/dashboard" className="flex items-center gap-2 text-slate-400 dark:text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50">
+          <Link to="/dashboard" className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50">
             <ArrowLeft className="w-4 h-4" /> <span>Kembali ke Dashboard</span>
           </Link>
           <div className="flex items-center gap-3">

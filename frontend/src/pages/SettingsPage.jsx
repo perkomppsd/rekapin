@@ -164,7 +164,7 @@ export default function SettingsPage() {
                 <div>
                   <div className="text-slate-900 dark:text-slate-100 font-medium">{f.label}</div>
                   <div className="text-slate-500 text-xs">
-                    key: <span className="font-mono">{f.key}</span> · tipe: <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{f.type}</span>
+                    key: <span className="font-mono">{f.key}</span> · tipe: <span className="text-slate-600 dark:text-slate-300">{f.type}</span>
                     {f.type === "select" && f.options?.length ? <> · opsi: {f.options.join(", ")}</> : null}
                   </div>
                 </div>

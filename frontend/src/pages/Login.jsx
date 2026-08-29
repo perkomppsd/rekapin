@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
+import { useTheme } from "@/context/ThemeContext";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +10,9 @@ import { Users, ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
-  const { user, login, error } = useAuth();
+  // Cara login ditentukan server (/auth/config), bukan ditebak frontend.
+  const { gelap } = useTheme();
+  const { user, login, error, loginWithGoogle, authConfig } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +59,7 @@ export default function Login() {
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50 leading-[1.05]">
               Rekap kandidat, <span className="text-indigo-600 dark:text-indigo-400">otomatis rapi</span> di semua sheet.
             </h1>
-            <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-base max-w-lg">
+            <p className="text-slate-600 dark:text-slate-300 text-base max-w-lg">
               Cukup input di Master Data — Interview, Training, Blacklist, dan Placement
               terisi otomatis. Fokus pada people, bukan spreadsheet.
             </p>
@@ -79,9 +83,38 @@ export default function Login() {
             <p className="text-slate-500 dark:text-slate-400 text-sm">Gunakan akun HR Anda untuk melanjutkan.</p>
           </div>
 
+          {authConfig.google_aktif && (
+            <div className="space-y-3">
+              <GoogleLoginButton
+                clientId={authConfig.google_client_id}
+                gelap={gelap}
+                onCredential={async (kredensial) => {
+                  setSubmitting(true);
+                  await loginWithGoogle(kredensial);
+                  setSubmitting(false);
+                }}
+              />
+              {authConfig.password_aktif && (
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  <span className="text-slate-500 text-xs">atau</span>
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {!authConfig.google_aktif && !authConfig.password_aktif && (
+            <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
+              Belum ada cara login yang aktif. Hubungi admin server —
+              lihat <span className="font-mono text-xs">backend/scripts/akses_darurat.py</span>.
+            </div>
+          )}
+
+          {authConfig.password_aktif && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-xs tracking-[0.15em] uppercase">Email</Label>
+              <Label htmlFor="email" className="text-slate-600 dark:text-slate-300 text-xs tracking-[0.15em] uppercase">Email</Label>
               <Input
                 id="email"
                 data-testid="login-email-input"
@@ -95,7 +128,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-xs tracking-[0.15em] uppercase">Password</Label>
+              <Label htmlFor="password" className="text-slate-600 dark:text-slate-300 text-xs tracking-[0.15em] uppercase">Password</Label>
               <Input
                 id="password"
                 data-testid="login-password-input"
@@ -109,6 +142,7 @@ export default function Login() {
               />
             </div>
           </div>
+          )}
 
           {error ? (
             <div className="text-rose-600 dark:text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-md px-3 py-2">
@@ -116,6 +150,7 @@ export default function Login() {
             </div>
           ) : null}
 
+          {authConfig.password_aktif && (
           <Button
             type="submit"
             data-testid="login-submit-button"
@@ -129,6 +164,7 @@ export default function Login() {
               </span>
             )}
           </Button>
+          )}
 
           <div className="text-center text-xs text-slate-500">
             Aman & terenkripsi · JWT + bcrypt

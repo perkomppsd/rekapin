@@ -65,6 +65,25 @@ MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 PUBLIC_RATE_LIMIT = int(os.environ.get("PUBLIC_RATE_LIMIT", "5"))
 PUBLIC_RATE_WINDOW_MINUTES = int(os.environ.get("PUBLIC_RATE_WINDOW_MINUTES", "60"))
 
+# ---------- Login Google ----------
+# Client ID dari console.cloud.google.com (APIs & Services -> Credentials ->
+# OAuth client ID, tipe "Web application"). Bersifat publik, bukan rahasia.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
+GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"]
+
+
+def password_login_enabled() -> bool:
+    """Login email+password. Dimatikan secara default: masuk lewat Google saja.
+
+    JALUR DARURAT: kalau login Google bermasalah (Client ID salah, project
+    Google terhapus, dst) dan tidak ada yang bisa masuk, hidupkan sementara
+    dengan menyetel PASSWORD_LOGIN=true di backend/.env lalu restart server.
+    Lihat juga: backend/scripts/akses_darurat.py
+    """
+    return os.environ.get("PASSWORD_LOGIN", "").strip().lower() in ("1", "true", "yes")
+
+
 # Batas percobaan login GAGAL per IP. Login yang berhasil tidak dihitung.
 LOGIN_RATE_LIMIT = int(os.environ.get("LOGIN_RATE_LIMIT", "10"))
 LOGIN_RATE_WINDOW_MINUTES = int(os.environ.get("LOGIN_RATE_WINDOW_MINUTES", "15"))

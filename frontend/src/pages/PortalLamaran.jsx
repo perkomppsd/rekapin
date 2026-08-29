@@ -111,7 +111,7 @@ export default function PortalLamaran() {
         <div className={`${T.panel} p-10 text-center`} data-testid="lamaran-sukses">
           <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto mb-4" />
           <h1 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-50">Lamaran Terkirim</h1>
-          <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 mt-2">{sukses.pesan}</p>
+          <p className="text-slate-600 dark:text-slate-300 mt-2">{sukses.pesan}</p>
           <div className="mt-5 inline-block px-4 py-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10">
             <div className={T.label}>Nomor Lamaran</div>
             <div className="font-mono text-lg text-indigo-700 dark:text-indigo-200 mt-1">{sukses.nomor}</div>
@@ -157,13 +157,13 @@ export default function PortalLamaran() {
         {job.deskripsi && (
           <div className="mt-4">
             <div className={`${T.sectionLabel} mb-1`}>Deskripsi Pekerjaan</div>
-            <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{job.deskripsi}</p>
+            <p className="text-slate-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{job.deskripsi}</p>
           </div>
         )}
         {job.persyaratan && (
           <div className="mt-4">
             <div className={`${T.sectionLabel} mb-1`}>Persyaratan</div>
-            <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{job.persyaratan}</p>
+            <p className="text-slate-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{job.persyaratan}</p>
           </div>
         )}
       </div>

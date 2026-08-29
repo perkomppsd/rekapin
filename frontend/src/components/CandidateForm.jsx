@@ -107,7 +107,7 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
 
         {meta.status === "error" ? (
           <div className="py-10 text-center space-y-3">
-            <p className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-sm">Gagal memuat konfigurasi form.</p>
+            <p className="text-slate-600 dark:text-slate-300 text-sm">Gagal memuat konfigurasi form.</p>
             <Button type="button" onClick={meta.reload} className={T.btnPrimary}>Coba lagi</Button>
           </div>
         ) : (

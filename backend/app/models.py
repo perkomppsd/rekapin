@@ -78,6 +78,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str          # ID token dari tombol Google di frontend
+
+
 class UserOut(BaseModel):
     id: str
     email: str

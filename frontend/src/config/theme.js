@@ -31,8 +31,8 @@ export const T = {
   // Tombol
   btnPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white rounded-full pill-btn",
   btnOutline: "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-50 rounded-full pill-btn",
-  btnGhost: "text-slate-400 dark:text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full",
-  btnGhostPlain: "text-slate-400 dark:text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800",
+  btnGhost: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full",
+  btnGhostPlain: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800",
   btnDanger: "bg-rose-600 hover:bg-rose-500 text-white",
   btnCancel: "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-50",
 };
@@ -83,8 +83,8 @@ export const TONES = {
     button: "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-200 hover:bg-violet-500/20 hover:text-violet-900 dark:hover:text-violet-50",
   },
   neutral: {
-    card: "text-slate-400 dark:text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700",
-    pill: "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700",
+    card: "text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700",
+    pill: "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700",
     button: "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-50",
   },
 };

@@ -6,6 +6,17 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // null=checking, false=guest, object=user
   const [error, setError] = useState("");
+  // Cara login yang tersedia (dari server) — frontend tidak boleh menebak.
+  const [authConfig, setAuthConfig] = useState({
+    google_aktif: false, password_aktif: false, google_client_id: "",
+  });
+
+  useEffect(() => {
+    api.get("/auth/config")
+      .then(({ data }) => setAuthConfig(data))
+      .catch(() => setAuthConfig(
+        { google_aktif: false, password_aktif: true, google_client_id: "" }));
+  }, []);
 
   const bootstrap = useCallback(async () => {
     if (!tokenStore.get()) {
@@ -38,13 +49,27 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async (credential) => {
+    setError("");
+    try {
+      const { data } = await api.post("/auth/google", { credential });
+      tokenStore.set(data.access_token);
+      setUser(data.user);
+      return true;
+    } catch (e) {
+      setError(describeApiError(e, "Gagal masuk dengan Google."));
+      return false;
+    }
+  };
+
   const logout = () => {
     tokenStore.clear();
     setUser(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, error, setError }}>
+    <AuthContext.Provider
+      value={{ user, login, loginWithGoogle, logout, error, setError, authConfig }}>
       {children}
     </AuthContext.Provider>
   );

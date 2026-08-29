@@ -16,8 +16,8 @@ export default function Pagination({ info, onChange, disabled = false }) {
   return (
     <div className="flex items-center justify-between gap-3 mt-3 px-1" data-testid="pagination">
       <div className={T.hint} data-testid="pagination-info">
-        Menampilkan <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{first}–{last}</span> dari{" "}
-        <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{total}</span> kandidat
+        Menampilkan <span className="text-slate-600 dark:text-slate-300">{first}–{last}</span> dari{" "}
+        <span className="text-slate-600 dark:text-slate-300">{total}</span> kandidat
       </div>
       {pages > 1 && (
         <div className="flex items-center gap-2">

@@ -260,3 +260,36 @@ def test_login_berhasil_tidak_memakan_kuota(client):
             assert r.status_code == 200, "login yang benar tidak boleh ikut terkunci"
     finally:
         ratelimit.reset()
+
+
+# ---------------------------------------------------------------------------
+# Login Google
+# ---------------------------------------------------------------------------
+def test_auth_config_bisa_dibaca_tanpa_login(client):
+    r = client.get("/api/auth/config")
+    assert r.status_code == 200
+    data = r.json()
+    assert set(data) == {"google_client_id", "google_aktif", "password_aktif"}
+
+
+def test_login_google_ditolak_kalau_token_ngawur(client, monkeypatch):
+    from app import config
+    monkeypatch.setattr(config, "GOOGLE_CLIENT_ID", "uji.apps.googleusercontent.com")
+    r = client.post("/api/auth/google", json={"credential": "bukan-token-jwt"})
+    assert r.status_code == 401
+
+
+def test_login_google_mati_kalau_client_id_kosong(client, monkeypatch):
+    from app import config
+    monkeypatch.setattr(config, "GOOGLE_CLIENT_ID", "")
+    r = client.post("/api/auth/google", json={"credential": "apa-saja"})
+    assert r.status_code == 503
+
+
+def test_login_password_ditolak_kalau_dimatikan(client, monkeypatch):
+    from app import config
+    monkeypatch.setattr(config, "password_login_enabled", lambda: False)
+    r = client.post("/api/auth/login", json={
+        "email": os.environ["ADMIN_EMAIL"], "password": os.environ["ADMIN_PASSWORD"]})
+    assert r.status_code == 403
+    assert "Google" in r.json()["detail"]

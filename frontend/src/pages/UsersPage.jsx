@@ -155,7 +155,7 @@ export default function UsersPage() {
                 <TableRow key={u.id} data-testid={`row-user-${u.id}`}
                   className="border-slate-200 dark:border-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800/40">
                   <TableCell className="text-slate-900 dark:text-slate-100 font-medium">{u.name}</TableCell>
-                  <TableCell className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{u.email}</TableCell>
+                  <TableCell className="text-slate-600 dark:text-slate-300">{u.email}</TableCell>
                   <TableCell>
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${tone(ROLE_TONES[u.role] || "neutral", "pill")}`}>
                       {u.role}

@@ -36,7 +36,7 @@ function adaTeksTersorot() {
 function NikCell({ value, tempPrefix }) {
   if (!value) return <span className="text-slate-500">—</span>;
   const sementara = tempPrefix && String(value).startsWith(tempPrefix);
-  if (!sementara) return <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 font-mono text-xs">{value}</span>;
+  if (!sementara) return <span className="text-slate-600 dark:text-slate-300 font-mono text-xs">{value}</span>;
   return (
     <span className="inline-flex items-center gap-1.5" title="NIK sementara — ganti kalau KTP sudah ada">
       <span className="text-slate-500 font-mono text-xs">{value}</span>
@@ -90,9 +90,9 @@ const ratingAverage = (row) => {
 // Cara menampilkan sel. Tambah tampilan baru: tambah satu entri di sini.
 const VARIANTS = {
   primary: (v) => <span className="font-medium text-slate-900 dark:text-slate-50">{v || "—"}</span>,
-  text: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300">{v || "—"}</span>,
-  mutedXs: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 text-xs">{v || "—"}</span>,
-  mono: (v) => <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 font-mono text-xs">{v || "—"}</span>,
+  text: (v) => <span className="text-slate-600 dark:text-slate-300">{v || "—"}</span>,
+  mutedXs: (v) => <span className="text-slate-600 dark:text-slate-300 text-xs">{v || "—"}</span>,
+  mono: (v) => <span className="text-slate-600 dark:text-slate-300 font-mono text-xs">{v || "—"}</span>,
   truncate: (v) => (
     <span className="text-slate-500 dark:text-slate-400 text-xs max-w-[200px] truncate block" title={v || ""}>
       {v || "—"}
@@ -117,7 +117,7 @@ const SPECIAL_CELLS = {
     const umur = displayAge(row);
     if (!umur) return <span className="text-slate-500">—</span>;
     return (
-      <span className="text-slate-400 dark:text-slate-600 dark:text-slate-300 tabular-nums"
+      <span className="text-slate-600 dark:text-slate-300 tabular-nums"
         title={umur.perkiraan
           ? "Usia lama yang tersimpan — isi tanggal lahir agar terhitung otomatis"
           : `Dihitung dari tanggal lahir ${row.tanggal_lahir}`}>
@@ -129,7 +129,7 @@ const SPECIAL_CELLS = {
   __blacklist_info: (row) => (
     <div className="max-w-[320px]">
       <StatusPill fieldKey="status_blacklist" value={row.status_blacklist} />
-      <div className="text-xs text-slate-400 dark:text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-wrap break-words"
+      <div className="text-xs text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-wrap break-words"
         title={row.alasan_blacklist}>
         {row.alasan_blacklist || <span className="text-slate-500">Tidak ada alasan</span>}
       </div>

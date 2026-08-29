@@ -493,6 +493,9 @@ Yang wajib ada di `backend/.env`:
 | `WEBHOOK_CRON_SECRET` | token untuk `POST /api/cron/training-reminder` |
 | `CORS_ORIGINS` | daftar origin frontend, dipisah koma |
 | `LOCAL_UTC_OFFSET_HOURS` | zona waktu kantor untuk filter "tanggal input" (default `7` = WIB) |
+| `GOOGLE_CLIENT_ID` | OAuth Client ID Google (publik, bukan rahasia). Kosong = login Google mati |
+| `PASSWORD_LOGIN` | `false` (default) = masuk lewat Google saja. `true` hanya untuk pemulihan |
+| `LOGIN_RATE_LIMIT`, `LOGIN_RATE_WINDOW_MINUTES` | batas percobaan login gagal per IP |
 | `ADMIN_PASSWORD_RESET` | set `true` SEKALI kalau password admin lupa; selain itu password yang diganti dari halaman User tidak akan ditimpa saat restart |
 
 Frontend hanya perlu `REACT_APP_BACKEND_URL` di `frontend/.env`.
@@ -546,3 +549,38 @@ Aturannya:
 Endpoint `/api/publik/poster/{id}` memfilternya di query, jadi berkas lamaran
 tidak bisa terambil dari sana walau id-nya ditebak. Ini dijaga oleh
 `tests/test_http_publik.py`.
+
+
+---
+
+## Login & jalur pemulihan
+
+Masuk aplikasi memakai **akun Google**. Google hanya membuktikan identitas —
+izin masuk tetap ditentukan daftar user aplikasi, jadi akun Google yang
+emailnya belum terdaftar tetap ditolak (`403`).
+
+Menyiapkan Client ID (sekali saja):
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services
+   → Credentials → **Create OAuth client ID** → tipe **Web application**
+2. Authorized JavaScript origins: `http://localhost:3000`, `http://localhost:3001`,
+   dan domain produksi nanti
+3. Salin Client ID ke `GOOGLE_CLIENT_ID` di `backend/.env`, restart backend
+
+Tidak perlu client secret — verifikasi ID token memakai kunci publik Google.
+
+### Kalau tidak ada yang bisa masuk
+
+Karena login password dimatikan, masalah pada konfigurasi Google membuat semua
+orang terkunci. Jalan keluarnya tidak memerlukan mengubah kode:
+
+```bash
+cd backend
+.venv/bin/python scripts/akses_darurat.py                    # lihat kondisi
+.venv/bin/python scripts/akses_darurat.py --daftar-user
+.venv/bin/python scripts/akses_darurat.py --jadikan-admin email@gmail.com
+.venv/bin/python scripts/akses_darurat.py --set-password email@gmail.com
+```
+
+Lalu set `PASSWORD_LOGIN=true` di `backend/.env`, restart, masuk pakai password,
+perbaiki konfigurasi Google, dan kembalikan ke `false`.
