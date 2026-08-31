@@ -113,14 +113,7 @@ export default function Login() {
             </div>
           )}
 
-          {!authConfig.google_aktif && !authConfig.password_aktif && (
-            <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
-              Belum ada cara login yang aktif. Hubungi admin server —
-              lihat <span className="font-mono text-xs">backend/scripts/akses_darurat.py</span>.
-            </div>
-          )}
-
-          {authConfig.password_aktif && (
+          {authConfig.password_aktif !== false && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-600 dark:text-slate-300 text-xs tracking-[0.15em] uppercase">Email</Label>
