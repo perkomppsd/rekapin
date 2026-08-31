@@ -2,7 +2,11 @@ import axios from "axios";
 
 const getBackendUrl = () => {
   if (process.env.REACT_APP_BACKEND_URL) return process.env.REACT_APP_BACKEND_URL;
-  if (typeof window !== "undefined" && window.location?.hostname) {
+  if (typeof window !== "undefined") {
+    // If running unified (e.g. cloud hosting on port 80/443 or backend direct port 8001)
+    if (window.location.port !== "3000" && window.location.port !== "3001") {
+      return window.location.origin;
+    }
     const host = window.location.hostname;
     return `http://${host}:8001`;
   }

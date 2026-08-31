@@ -58,6 +58,10 @@ async def root():
 app.include_router(api_router)
 app.include_router(cron.public_router)  # /api/cron/... (dipanggil cron platform)
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -65,6 +69,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Root & Frontend Build Directory
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+FRONTEND_BUILD_DIR = PROJECT_ROOT / "frontend" / "build"
+UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
+
+# Mount /uploads if exists
+if UPLOADS_DIR.exists():
+    app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
+# Mount /static from React build if exists
+if (FRONTEND_BUILD_DIR / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_BUILD_DIR / "static")), name="static")
+
+# Catch-all route to serve React frontend SPA (index.html)
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_react_spa(full_path: str):
+    # Pass through /api routes if unhandled
+    if full_path.startswith("api/") or full_path == "api":
+        return {"detail": "Not Found"}
+    
+    file_path = FRONTEND_BUILD_DIR / full_path
+    if file_path.is_file():
+        return FileResponse(str(file_path))
+    
+    index_file = FRONTEND_BUILD_DIR / "index.html"
+    if index_file.is_file():
+        return FileResponse(str(index_file))
+    
+    return {"message": "HR Recruitment API is running. Build frontend to view UI."}
 
 
 # ---------- Startup / shutdown ----------
