@@ -2,7 +2,6 @@
   "name": "hr-recruitment-system-root",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm run build",
-    "start": "cd frontend && npm start"
+    "build": "cd frontend && npm run build"
   }
 }
