@@ -74,14 +74,11 @@ GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"]
 
 
 def password_login_enabled() -> bool:
-    """Login email+password. Dimatikan secara default: masuk lewat Google saja.
-
-    JALUR DARURAT: kalau login Google bermasalah (Client ID salah, project
-    Google terhapus, dst) dan tidak ada yang bisa masuk, hidupkan sementara
-    dengan menyetel PASSWORD_LOGIN=true di backend/.env lalu restart server.
-    Lihat juga: backend/scripts/akses_darurat.py
-    """
-    return os.environ.get("PASSWORD_LOGIN", "").strip().lower() in ("1", "true", "yes")
+    """Login email+password. Aktif secara default."""
+    val = os.environ.get("PASSWORD_LOGIN", "").strip().lower()
+    if val in ("0", "false", "no"):
+        return False
+    return True
 
 
 # Batas percobaan login GAGAL per IP. Login yang berhasil tidak dihitung.
