@@ -14,8 +14,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, ExternalLink, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, ExternalLink, X, Image as ImageIcon, Sparkles } from "lucide-react";
 import AdminPageShell from "@/components/AdminPageShell";
+import PosterStudioModal from "@/components/PosterStudioModal";
 import { formatDate } from "@/lib/dates";
 import { FORM, T, tone } from "@/config/theme";
 
@@ -34,6 +35,7 @@ export default function JobsPage() {
   const [form, setForm] = useState(KOSONG);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [posterStudioJob, setPosterStudioJob] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -145,6 +147,13 @@ export default function JobsPage() {
             Lamaran Masuk
           </Button>
         </Link>
+        <Button
+          variant="outline"
+          onClick={() => setPosterStudioJob(items[0] || { judul: "STAFF REKRUTMEN", unit_usaha: "SUNDRA ARENA", lokasi: "Dagan, Kec. Solokuro, Kab. Lamongan" })}
+          className={`rounded-full pill-btn ${tone("amber", "button")}`}
+        >
+          <Sparkles className="w-4 h-4 mr-2 text-amber-500" /> Studio Poster & QR Code
+        </Button>
       </div>
 
       <form onSubmit={simpan} className={`${T.panel} p-6 space-y-4`}>
@@ -289,6 +298,15 @@ export default function JobsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPosterStudioJob(job)}
+                    title="Buat Poster Flyer & QR Code"
+                    className={`rounded-full ${tone("amber", "button")} text-xs px-2.5`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1" /> Studio Poster
+                  </Button>
                   {job.status !== "Aktif" && (
                     <Button size="sm" variant="outline" onClick={() => ubahStatus(job, "Aktif")}
                       className={`rounded-full ${tone("emerald", "button")}`}>Aktifkan</Button>
@@ -311,6 +329,13 @@ export default function JobsPage() {
           </ul>
         )}
       </div>
+
+      <PosterStudioModal
+        open={Boolean(posterStudioJob)}
+        onOpenChange={(v) => !v && setPosterStudioJob(null)}
+        job={posterStudioJob}
+        onPosterUploaded={load}
+      />
     </AdminPageShell>
   );
 }

@@ -64,7 +64,7 @@ async def build_meta() -> dict:
                    "stat": t.stat, "stat_label": t.stat_label or t.label}
                   for t in schema.TABS],
         "funnel": [{"key": k, "label": label} for k, label, _p, _q in schema.FUNNEL],
-        "email_templates": templates.public_templates(),
+        "email_templates": await templates.get_all_templates(),
         "import_columns": [
             {"key": key, "label": schema.FIELD_BY_KEY[key].label}
             for key in schema.IMPORT_POSITIONAL

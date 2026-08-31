@@ -153,6 +153,8 @@ def _context(candidate: dict, extra: Optional[dict] = None) -> Dict[str, str]:
         "jam": escape(c.get("jam_interview", "")),
         "metode": escape(c.get("metode_interview", "")),
         "penempatan": penempatan,
+        "link_online": escape(c.get("link_online") or c.get("link") or ""),
+        "link": escape(c.get("link_online") or c.get("link") or ""),
         "email_kandidat": escape(c.get("email", "")),
         "no_hp": escape(c.get("no_hp", "")),
         "app_url": escape(config.PUBLIC_APP_URL.rstrip("/")),
@@ -181,4 +183,83 @@ def render(template_id: str, candidate: dict, extra: Optional[dict] = None) -> O
 
 def public_templates() -> List[dict]:
     """Daftar template yang boleh dipilih user untuk dikirim ke kandidat."""
-    return [{"id": t.id, "label": t.label} for t in TEMPLATES if not t.internal]
+    return [{"id": t.id, "label": t.label, "subject": t.subject, "body": t.body} for t in TEMPLATES if not t.internal]
+
+
+# ---------- Dynamic DB Storage Support ----------
+async def seed_default_templates():
+    from ..db import db
+    count = await db.email_templates.count_documents({})
+    if count == 0:
+        docs = []
+        for t in TEMPLATES:
+            docs.append({
+                "id": t.id,
+                "label": t.label,
+                "subject": t.subject,
+                "body": t.body,
+                "fallbacks": t.fallbacks or {},
+                "internal": t.internal,
+            })
+        if docs:
+            await db.email_templates.insert_many(docs)
+
+
+async def get_all_templates() -> List[dict]:
+    from ..db import db
+    await seed_default_templates()
+    docs = await db.email_templates.find({}, {"_id": 0}).to_list(100)
+    return docs
+
+
+async def render_async(
+    template_id: Optional[str],
+    candidate: dict,
+    extra: Optional[dict] = None,
+    custom_subject: Optional[str] = None,
+    custom_body: Optional[str] = None,
+) -> Optional[dict]:
+    """Render template dari DB atau custom subject & body."""
+    from ..db import db
+    ctx = _context(candidate, extra)
+
+    # 1. Jika custom_subject & custom_body diberikan langsung oleh user saat kirim email
+    if custom_subject and custom_body:
+        subj_rendered = Template(custom_subject).safe_substitute(ctx)
+        body_rendered = Template(custom_body).safe_substitute(ctx)
+        return {
+            "subject": subj_rendered,
+            "html": wrap(body_rendered if ("<p>" in body_rendered or "<div>" in body_rendered) else body_rendered.replace("\n", "<br/>")),
+        }
+
+    # 2. Ambil dari DB atau fallback TEMPLATES
+    await seed_default_templates()
+    tpl_doc = await db.email_templates.find_one({"id": template_id}, {"_id": 0})
+    if not tpl_doc and template_id in TEMPLATE_BY_ID:
+        spec = TEMPLATE_BY_ID[template_id]
+        tpl_doc = {
+            "id": spec.id,
+            "label": spec.label,
+            "subject": spec.subject,
+            "body": spec.body,
+            "fallbacks": spec.fallbacks or {},
+        }
+    
+    if not tpl_doc:
+        return None
+
+    fallbacks = tpl_doc.get("fallbacks") or {}
+    for key, fallback in fallbacks.items():
+        if not ctx.get(key):
+            ctx[key] = escape(fallback)
+
+    subj_text = tpl_doc.get("subject", "")
+    body_text = tpl_doc.get("body", "")
+
+    subj_rendered = Template(subj_text).safe_substitute(ctx)
+    body_rendered = Template(body_text).safe_substitute(ctx)
+
+    return {
+        "subject": subj_rendered,
+        "html": wrap(body_rendered),
+    }

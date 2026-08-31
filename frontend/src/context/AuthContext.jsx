@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState("");
   // Cara login yang tersedia (dari server) — frontend tidak boleh menebak.
   const [authConfig, setAuthConfig] = useState({
-    google_aktif: false, password_aktif: false, google_client_id: "",
+    google_aktif: false, password_aktif: true, google_client_id: "",
   });
 
   useEffect(() => {

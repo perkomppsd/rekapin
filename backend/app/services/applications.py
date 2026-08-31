@@ -36,7 +36,7 @@ BERKAS = (
 # Data pelamar yang disalin ke kandidat saat lamaran diterima.
 FIELD_PELAMAR = ("nama", "nik", "email", "no_hp", "tanggal_lahir", "alamat",
                  "domisili", "status_pernikahan", "pendidikan_terakhir",
-                 "pengalaman_kerja")
+                 "pengalaman_kerja", "nama_bank", "no_rekening")
 
 
 async def _nomor_baru() -> str:

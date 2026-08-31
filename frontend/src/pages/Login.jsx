@@ -20,12 +20,21 @@ export default function Login() {
   if (user && user !== false) return <Navigate to="/dashboard" replace />;
 
   const onSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
-    const ok = await login(email, password);
-    setSubmitting(false);
-    if (ok) toast.success("Selamat datang!");
-    else toast.error(error || "Login gagal");
+    try {
+      const ok = await login(email, password);
+      if (ok) {
+        toast.success("Selamat datang!");
+      } else {
+        toast.error("Email atau password salah");
+      }
+    } catch (err) {
+      toast.error(describeApiError(err, "Login gagal"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,26 +55,26 @@ export default function Login() {
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="text-slate-900 dark:text-slate-50 font-display font-bold text-lg">Rekapin</div>
-              <div className="text-slate-500 dark:text-slate-400 text-xs tracking-[0.2em] uppercase">HR Recruitment</div>
+              <div className="text-white font-display font-bold text-lg">Rekapin</div>
+              <div className="text-indigo-200/80 text-xs tracking-[0.2em] uppercase">HR Recruitment</div>
             </div>
           </div>
 
           <div className="space-y-6 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-400/30 bg-indigo-500/10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-400/40 bg-indigo-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              <span className="text-indigo-700 dark:text-indigo-200 text-xs tracking-[0.2em] uppercase">Master Data Terpusat</span>
+              <span className="text-indigo-200 text-xs tracking-[0.2em] uppercase font-semibold">Master Data Terpusat</span>
             </div>
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-50 leading-[1.05]">
-              Rekap kandidat, <span className="text-indigo-600 dark:text-indigo-400">otomatis rapi</span> di semua sheet.
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05]">
+              Rekap kandidat, <span className="text-indigo-400">otomatis rapi</span> di semua sheet.
             </h1>
-            <p className="text-slate-600 dark:text-slate-300 text-base max-w-lg">
+            <p className="text-slate-200 text-base max-w-lg leading-relaxed">
               Cukup input di Master Data — Interview, Training, Blacklist, dan Placement
               terisi otomatis. Fokus pada people, bukan spreadsheet.
             </p>
           </div>
 
-          <div className="text-slate-500 text-xs">© {new Date().getFullYear()} Rekapin — Built for HR teams</div>
+          <div className="text-slate-400 text-xs">© {new Date().getFullYear()} Rekapin — Built for HR teams</div>
         </div>
       </div>
 
@@ -123,6 +132,11 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onSubmit(e);
+                  }
+                }}
                 className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-50 h-11 focus:border-indigo-500 focus-visible:ring-indigo-500/40"
                 placeholder="you@company.com"
               />
@@ -137,6 +151,11 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onSubmit(e);
+                  }
+                }}
                 className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-50 h-11 focus:border-indigo-500 focus-visible:ring-indigo-500/40"
                 placeholder="••••••••"
               />

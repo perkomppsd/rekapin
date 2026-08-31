@@ -67,7 +67,38 @@ class BulkImportRequest(BaseModel):
 
 
 class SendEmailRequest(BaseModel):
-    template: str  # lihat app/emailing/templates.py
+    template: Optional[str] = "custom"
+    subject: Optional[str] = None
+    body: Optional[str] = None
+
+
+class EmailTemplateCreate(BaseModel):
+    id: Optional[str] = None
+    label: str
+    subject: str
+    body: str
+    fallbacks: Optional[Dict[str, str]] = None
+
+
+class EmailTemplateUpdate(BaseModel):
+    label: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    fallbacks: Optional[Dict[str, str]] = None
+
+
+class SendBulkReminderRequest(BaseModel):
+    target_type: Optional[str] = "candidates"  # candidates | internal_team
+    template: Optional[str] = "reminder"
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    candidate_ids: Optional[List[str]] = None
+    scope: Optional[str] = "all_active"  # selected | filtered | all_active | training
+    custom_tanggal: Optional[str] = None
+    custom_jam: Optional[str] = None
+    custom_metode: Optional[str] = None
+    custom_link: Optional[str] = None
+    custom_catatan: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

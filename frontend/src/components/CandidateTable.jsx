@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  MoreHorizontal, Pencil, Trash2, Ban, History, Mail, ArrowUp, ArrowDown, ArrowUpDown,
+  MoreHorizontal, Pencil, Trash2, Ban, History, Mail, ArrowUp, ArrowDown, ArrowUpDown, Paperclip,
 } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { useMeta } from "@/context/MetaContext";
@@ -153,6 +153,7 @@ function Cell({ column, row, field, tempPrefix }) {
 
 function RowActions({ row, onEdit, onDelete, onBlacklist, onShowHistory, onSendEmail }) {
   const alreadyBlacklisted = (row.status_blacklist || "").toLowerCase().startsWith("ya");
+  const hasBerkas = row.berkas && Object.keys(row.berkas).length > 0;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -164,8 +165,14 @@ function RowActions({ row, onEdit, onDelete, onBlacklist, onShowHistory, onSendE
       <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
         <DropdownMenuItem onClick={() => onEdit(row)} data-testid={`action-edit-${row.id}`}
           className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
-          <Pencil className="w-4 h-4 mr-2" /> Edit
+          <Pencil className="w-4 h-4 mr-2" /> Edit Kandidat
         </DropdownMenuItem>
+        {hasBerkas && (
+          <DropdownMenuItem onClick={() => onEdit(row)} data-testid={`action-berkas-${row.id}`}
+            className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50 font-medium text-indigo-600 dark:text-indigo-400">
+            <Paperclip className="w-4 h-4 mr-2" /> Dokumen & Berkas ({Object.keys(row.berkas).length})
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => onSendEmail && onSendEmail(row)}
           data-testid={`action-email-${row.id}`} className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50">
           <Mail className="w-4 h-4 mr-2" /> Kirim Email
@@ -192,7 +199,7 @@ function RowActions({ row, onEdit, onDelete, onBlacklist, onShowHistory, onSendE
 
 export default function CandidateTable({
   rows, onEdit, onDelete, onBlacklist, onShowHistory, onSendEmail, view = "master",
-  sort, onSort,
+  sort, onSort, selectedIds = [], onToggleSelect, onToggleSelectAll,
 }) {
   const meta = useMeta();
 
@@ -208,6 +215,9 @@ export default function CandidateTable({
   }
 
   const columns = columnsFor(view);
+  const allRowIds = rows.map((r) => r.id);
+  const allSelected = allRowIds.length > 0 && allRowIds.every((id) => selectedIds.includes(id));
+  const someSelected = selectedIds.length > 0 && !allSelected;
 
   return (
     <div className={`${T.panelSubtle} overflow-hidden`}>
@@ -215,6 +225,20 @@ export default function CandidateTable({
         <Table>
           <TableHeader className="bg-slate-100 dark:bg-slate-900/70 sticky top-0">
             <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
+              {onToggleSelectAll && (
+                <TableHead className="w-10 px-4 h-11">
+                  <input
+                    type="checkbox"
+                    aria-label="Pilih semua kandidat"
+                    checked={allSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = someSelected;
+                    }}
+                    onChange={() => onToggleSelectAll(allRowIds)}
+                    className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                  />
+                </TableHead>
+              )}
               {columns.map((c) => (
                 <SortableHead key={c.key} column={c} sort={sort} onSort={onSort}
                   label={c.label || meta.labelOf(c.key)} />
@@ -223,39 +247,60 @@ export default function CandidateTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-testid={`row-candidate-${row.id}`}
-                role="button"
-                tabIndex={0}
-                title="Klik untuk edit kandidat"
-                onClick={() => { if (!adaTeksTersorot()) onEdit(row); }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onEdit(row);
-                  }
-                }}
-                className="border-slate-200 dark:border-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800/40 data-row cursor-pointer
-                  focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/60">
-                {columns.map((c) => (
-                  <TableCell key={c.key}>
-                    <Cell column={c} row={row} field={meta.fieldByKey?.[c.key]}
-                      tempPrefix={meta.nik_temp_prefix} />
+            {rows.map((row) => {
+              const isSelected = selectedIds.includes(row.id);
+              return (
+                <TableRow
+                  key={row.id}
+                  data-testid={`row-candidate-${row.id}`}
+                  role="button"
+                  tabIndex={0}
+                  title="Klik untuk edit kandidat"
+                  onClick={() => { if (!adaTeksTersorot()) onEdit(row); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onEdit(row);
+                    }
+                  }}
+                  className={`border-slate-200 dark:border-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800/40 data-row cursor-pointer
+                    focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/60 ${
+                      isSelected ? "bg-indigo-500/5 dark:bg-indigo-500/10" : ""
+                    }`}
+                >
+                  {onToggleSelect && (
+                    <TableCell
+                      className="w-10 px-4"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={`Pilih ${row.nama}`}
+                        checked={isSelected}
+                        onChange={() => onToggleSelect(row.id)}
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                    </TableCell>
+                  )}
+                  {columns.map((c) => (
+                    <TableCell key={c.key}>
+                      <Cell column={c} row={row} field={meta.fieldByKey?.[c.key]}
+                        tempPrefix={meta.nik_temp_prefix} />
+                    </TableCell>
+                  ))}
+                  {/* Menu aksi punya aksinya sendiri, jadi klik di sel ini tidak
+                      boleh ikut membuka form edit. */}
+                  <TableCell className="text-right"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}>
+                    <RowActions row={row} onEdit={onEdit} onDelete={onDelete}
+                      onBlacklist={onBlacklist} onShowHistory={onShowHistory}
+                      onSendEmail={onSendEmail} />
                   </TableCell>
-                ))}
-                {/* Menu aksi punya aksinya sendiri, jadi klik di sel ini tidak
-                    boleh ikut membuka form edit. */}
-                <TableCell className="text-right"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}>
-                  <RowActions row={row} onEdit={onEdit} onDelete={onDelete}
-                    onBlacklist={onBlacklist} onShowHistory={onShowHistory}
-                    onSendEmail={onSendEmail} />
-                </TableCell>
-              </TableRow>
-            ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

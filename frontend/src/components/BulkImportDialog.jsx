@@ -9,7 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ClipboardPaste, Rows, CheckCircle2 } from "lucide-react";
+import { ClipboardPaste, Rows, CheckCircle2, Download } from "lucide-react";
+import { toast } from "sonner";
+import { API, tokenStore } from "@/lib/api";
 import { useMeta } from "@/context/MetaContext";
 import { parsePaste } from "@/lib/paste";
 import { T } from "@/config/theme";
@@ -20,6 +22,27 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
   const meta = useMeta();
   const [raw, setRaw] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await fetch(`${API}/candidates/import-template`, {
+        headers: { Authorization: `Bearer ${tokenStore.get()}` },
+      });
+      if (!res.ok) throw new Error("Gagal mengunduh template");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template_import_kandidat_rekapin.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Template Excel berhasil diunduh");
+    } catch (e) {
+      toast.error("Gagal mengunduh template import");
+    }
+  };
 
   const columns = useMemo(() => meta.import_columns || [], [meta.import_columns]);
   const columnKeys = useMemo(() => columns.map((c) => c.key), [columns]);
@@ -53,13 +76,25 @@ export default function BulkImportDialog({ open, onOpenChange, onImport }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`sm:max-w-4xl ${T.dialog} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl flex items-center gap-2">
-            <ClipboardPaste className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Import Massal dari Google Sheets / Excel
-          </DialogTitle>
-          <DialogDescription className="text-slate-500 dark:text-slate-400">
-            Salin data kandidat dari Google Forms / Google Sheets / Excel — lalu paste di kotak di bawah.
-            Urutan kolom harus mengikuti panduan berikut. Baris pertama sebagai header opsional (otomatis dideteksi).
-          </DialogDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <DialogTitle className="font-display text-2xl flex items-center gap-2">
+                <ClipboardPaste className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Import Massal dari Google Sheets / Excel
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 dark:text-slate-400">
+                Salin data kandidat dari Google Forms / Google Sheets / Excel — atau unduh template Excel resmi di bawah ini.
+              </DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadTemplate}
+              className="rounded-full border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200 hover:bg-indigo-500/20 shrink-0 self-start sm:self-auto"
+            >
+              <Download className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" /> Unduh Template .xlsx
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">

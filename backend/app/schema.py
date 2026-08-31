@@ -124,6 +124,7 @@ STATUS_SETS: Dict[str, List[str]] = {
     "tipe_kerja": ["Full Time", "Part Time", "Kontrak", "Magang", "Harian"],
     "status_lowongan": ["Draft", "Aktif", "Tutup"],
     "status_lamaran": ["Baru", "Diproses", "Diterima", "Ditolak"],
+    "bank": ["BCA", "Mandiri", "BRI", "BNI", "BSI", "CIMB Niaga", "Permata", "Danamon", "Bank Jateng", "Bank Jatim", "Bank DKI", "Lainnya"],
 }
 
 # ---------------------------------------------------------------------------
@@ -218,6 +219,14 @@ FIELDS: Tuple[FieldSpec, ...] = (
               options_ref="jobdesk", placeholder="Posisi yang dilamar",
               aliases=("posisi apply", "posisi"), paste_index=4),
 
+    # --- Rekening Bank ---
+    FieldSpec("nama_bank", "Nama Bank", type="select", group="rekening",
+              options="bank", searchable=True, placeholder="Pilih Bank",
+              aliases=("bank", "nama bank")),
+    FieldSpec("no_rekening", "Nomor Rekening", group="rekening", searchable=True,
+              sensitive=True, placeholder="Nomor Rekening Bank",
+              aliases=("no rek", "nomor rekening", "no. rekening", "rek", "rekening")),
+
     # --- Penempatan ---
     FieldSpec("rencana_penempatan", "Rencana Penempatan", type="select",
               group="penempatan", options_ref="unit_usaha", paste_index=5),
@@ -311,6 +320,7 @@ def rating_average(doc: dict) -> float:
 # Grup form beserta judulnya (urutan = urutan section di form frontend).
 FIELD_GROUPS: Tuple[Tuple[str, str], ...] = (
     ("pribadi", "Data Pribadi"),
+    ("rekening", "Informasi Rekening Bank"),
     ("penilaian", "Penilaian Kandidat"),
     ("penempatan", "Penempatan"),
     ("interview", "Interview"),
@@ -344,6 +354,49 @@ UNIQUE_FIELDS: List[str] = [f.key for f in FIELDS if f.unique]
 EXPORT_COLUMNS: List[Tuple[str, str]] = [
     (f.key, f.export_label or f.label.upper()) for f in FIELDS if f.export
 ] + [("created_at", "TANGGAL INPUT")]
+
+EXPORT_PRESETS: Dict[str, Dict[str, Any]] = {
+    "full": {
+        "label": "Master Data Lengkap",
+        "description": "Semua kolom kandidat",
+        "keys": None,  # None means all columns
+    },
+    "summary": {
+        "label": "Ringkasan Penempatan",
+        "description": "Nama, HP, Penempatan Fix, Posisi Fix, Status, Mulai Training, Habis Kontrak, PIC",
+        "keys": ["nama", "no_hp", "apply", "penempatan_fix", "posisi_fix", "status_interview", "status_training", "tanggal_mulai_training", "tanggal_habis_kontrak", "pic", "created_at"],
+    },
+    "evaluation": {
+        "label": "Evaluasi & Penilaian",
+        "description": "Nama, Posisi, Pendidikan, Pengalaman, Penilaian Komunikasi/Kedisiplinan, Rata-rata",
+        "keys": ["nama", "apply", "pendidikan_terakhir", "pengalaman_kerja", "nilai_wajah", "nilai_komunikasi", "nilai_kedisiplinan", "nilai_rata", "keterangan", "pic"],
+    },
+    "legal": {
+        "label": "Kontrak & Legalitas",
+        "description": "NIK, Nama, Tanggal TTD, Tanggal Habis Kontrak, Status Kontrak",
+        "keys": ["nik", "nama", "status_tanda_tangan", "tanggal_tanda_tangan", "status_kontrak", "tanggal_ttd_kontrak", "tanggal_habis_kontrak", "keterangan"],
+    },
+    "blacklist": {
+        "label": "Rekap Blacklist",
+        "description": "NIK, Nama, No HP, Status Blacklist, Alasan Blacklist",
+        "keys": ["nik", "nama", "no_hp", "apply", "status_blacklist", "alasan_blacklist", "pic", "created_at"],
+    },
+}
+
+
+def columns_for_preset(preset_key: str = "full") -> List[Tuple[str, str]]:
+    """Return list of (key, export_label) for chosen preset."""
+    spec = EXPORT_PRESETS.get(preset_key, EXPORT_PRESETS["full"])
+    keys = spec["keys"]
+    if not keys:
+        return EXPORT_COLUMNS
+    # Return matched keys maintaining EXPORT_COLUMNS order or explicit preset order
+    all_col_map = dict(EXPORT_COLUMNS + [("usia", "USIA"), ("nilai_rata", "NILAI RATA-RATA")])
+    result = []
+    for k in keys:
+        if k in all_col_map:
+            result.append((k, all_col_map[k]))
+    return result
 
 
 def _import_header_map() -> Dict[str, str]:

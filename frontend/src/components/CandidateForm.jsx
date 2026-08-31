@@ -4,18 +4,47 @@
 // (sumbernya backend/app/schema.py). Untuk menambah kolom: cukup tambah
 // FieldSpec di schema.py. Penyesuaian tampilan ada di config/formFields.js.
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileText, Download, Paperclip, Upload, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { API, tokenStore } from "@/lib/api";
 import { useMeta } from "@/context/MetaContext";
 import FieldInput from "@/components/FieldInput";
 import {
   DERIVED_FIELDS, GROUP_WARNINGS, LINKED_FIELDS, FORM_LABEL_OVERRIDES, VISIBLE_WHEN,
 } from "@/config/formFields";
 import { T } from "@/config/theme";
+
+async function unduhBerkas(fileId, namaAsli) {
+  try {
+    const res = await fetch(`${API}/berkas/${fileId}`, {
+      headers: { Authorization: `Bearer ${tokenStore.get()}` },
+    });
+    if (!res.ok) throw new Error("Berkas tidak bisa diunduh");
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = namaAsli || "berkas";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    toast.error(e.message || "Gagal mengunduh berkas");
+  }
+}
+
+const STANDARD_BERKAS = [
+  { key: "cv", label: "CV / Resume" },
+  { key: "ijazah", label: "Ijazah" },
+  { key: "ktp", label: "KTP (Identitas)" },
+  { key: "pas_foto", label: "Pas Foto" },
+  { key: "skck", label: "SKCK" },
+];
 
 const RATING_GROUP = "penilaian";
 
@@ -46,6 +75,7 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
   const meta = useMeta();
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const fileInputRefs = useRef({});
 
   const defaults = useMemo(
     () => ({ ...meta.defaults(), custom_data: {} }),
@@ -87,6 +117,44 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
     if (ok) onOpenChange(false);
   };
 
+  const handleFileUpload = async (kat, e) => {
+    const selected = e.target.files?.[0];
+    if (!selected || !initial?.id) return;
+    const formData = new FormData();
+    formData.append("file", selected);
+    try {
+      const res = await fetch(`${API}/candidates/${initial.id}/berkas/${kat}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${tokenStore.get()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Gagal mengunggah berkas");
+      setForm((f) => ({ ...f, berkas: data.berkas || {} }));
+      toast.success(`Berkas ${kat.toUpperCase()} berhasil diunggah`);
+    } catch (err) {
+      toast.error(err.message || "Gagal upload berkas");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleFileDelete = async (kat) => {
+    if (!initial?.id || !window.confirm(`Hapus berkas ${kat.toUpperCase()}?`)) return;
+    try {
+      const res = await fetch(`${API}/candidates/${initial.id}/berkas/${kat}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${tokenStore.get()}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Gagal menghapus berkas");
+      setForm((f) => ({ ...f, berkas: data.berkas || {} }));
+      toast.success(`Berkas ${kat.toUpperCase()} dihapus`);
+    } catch (err) {
+      toast.error(err.message || "Gagal menghapus berkas");
+    }
+  };
+
   const visibleFields = (groupKey) =>
     meta.fieldsInGroup(groupKey).filter((f) => {
       const rule = VISIBLE_WHEN[f.key];
@@ -95,7 +163,7 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`sm:max-w-3xl ${T.dialog} max-h-[90vh] overflow-y-auto`}>
+      <DialogContent className={`w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-3xl ${T.dialog} max-h-[90vh] overflow-y-auto p-4 sm:p-6`}>
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
             {initial ? "Edit Kandidat" : "Tambah Kandidat"}
@@ -144,6 +212,94 @@ export default function CandidateForm({ open, onOpenChange, initial, onSubmit, c
                     testid={`input-custom-${f.key}`}
                   />
                 ))}
+              </Section>
+            )}
+
+            {initial?.id && (
+              <Section title="Dokumen & Berkas Kandidat (CV, KTP, Ijazah, Foto, SKCK)" cols={1}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {STANDARD_BERKAS.map(({ key, label }) => {
+                    const file = form.berkas?.[key];
+                    const kb = file?.ukuran ? `${(file.ukuran / 1024).toFixed(0)} KB` : "";
+
+                    return (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50"
+                      >
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          ref={(el) => (fileInputRefs.current[key] = el)}
+                          onChange={(e) => handleFileUpload(key, e)}
+                          className="hidden"
+                        />
+
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          <div className={`p-2 rounded-lg ${file ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" : "bg-slate-200 dark:bg-slate-800 text-slate-400"}`}>
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                              <span>{label}</span>
+                              {kb && <span className="text-[10px] text-slate-400 font-normal">({kb})</span>}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                              {file ? file.nama_asli || "Dokumen" : "Belum diunggah"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {file ? (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => unduhBerkas(file.id, file.nama_asli)}
+                                className="h-7 px-2.5 text-[11px] rounded-full"
+                                title="Unduh berkas"
+                              >
+                                <Download className="w-3 h-3 mr-1" /> Unduh
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => fileInputRefs.current[key]?.click()}
+                                className="h-7 px-2 text-[11px] rounded-full"
+                                title="Ganti berkas"
+                              >
+                                <Upload className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleFileDelete(key)}
+                                className="h-7 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 rounded-full"
+                                title="Hapus berkas"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => fileInputRefs.current[key]?.click()}
+                              className="h-7 px-3 text-[11px] rounded-full border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200 hover:bg-indigo-500/20"
+                            >
+                              <Upload className="w-3 h-3 mr-1" /> Upload
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </Section>
             )}
 

@@ -1,6 +1,14 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const getBackendUrl = () => {
+  if (process.env.REACT_APP_BACKEND_URL) return process.env.REACT_APP_BACKEND_URL;
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    return `http://${host}:8001`;
+  }
+  return "http://localhost:8001";
+};
+export const BACKEND_URL = getBackendUrl();
 export const API = `${BACKEND_URL}/api`;
 
 const TOKEN_KEY = "hr_recruit_token";

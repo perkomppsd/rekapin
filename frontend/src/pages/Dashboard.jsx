@@ -32,6 +32,8 @@ import CandidateTable from "@/components/CandidateTable";
 import BulkImportDialog from "@/components/BulkImportDialog";
 import HistoryDialog from "@/components/HistoryDialog";
 import EmailTemplateDialog from "@/components/EmailTemplateDialog";
+import ReminderDialog from "@/components/ReminderDialog";
+import { ExportDialog } from "@/components/ExportDialog";
 import FunnelChart from "@/components/FunnelChart";
 import { iconFor } from "@/config/icons";
 import Pagination from "@/components/Pagination";
@@ -116,10 +118,28 @@ export default function Dashboard() {
   const [historyCandidate, setHistoryCandidate] = useState(null);
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailCandidate, setEmailCandidate] = useState(null);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileInputRef = useRef(null);
   const isAdmin = user?.role === "admin";
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAll = (allIdsOnPage) => {
+    const allSelected = allIdsOnPage.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !allIdsOnPage.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...allIdsOnPage])));
+    }
+  };
 
   // Parameter filter yang dikirim ke server (dipakai listing & export).
   const filterParams = useMemo(() => {
@@ -276,9 +296,13 @@ export default function Dashboard() {
     }
   };
 
-  const exportExcel = async () => {
+  const handleExportWithOptions = async ({ preset, format, useSelectedOnly }) => {
     try {
-      const query = new URLSearchParams(filterParams).toString();
+      const p = { ...filterParams, preset, format };
+      if (useSelectedOnly && selectedIds.length > 0) {
+        p.ids = selectedIds.join(",");
+      }
+      const query = new URLSearchParams(p).toString();
       const res = await fetch(`${API}/candidates/export?${query}`, {
         headers: { Authorization: `Bearer ${tokenStore.get()}` },
       });
@@ -287,14 +311,36 @@ export default function Dashboard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `recruitment_${tab}.xlsx`;
+      const ext = format === "csv" ? "csv" : "xlsx";
+      a.download = `recruitment_${tab}_${preset}.${ext}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success("File Excel diunduh");
+      toast.success(`File ${ext.toUpperCase()} diunduh`);
     } catch (e) {
-      toast.error("Gagal export Excel");
+      toast.error("Gagal export data");
+    }
+  };
+
+  const handleDownloadImportTemplate = async () => {
+    try {
+      const res = await fetch(`${API}/candidates/import-template`, {
+        headers: { Authorization: `Bearer ${tokenStore.get()}` },
+      });
+      if (!res.ok) throw new Error("Gagal mengunduh template");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template_import_kandidat_rekapin.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Template Excel import diunduh");
+    } catch (e) {
+      toast.error("Gagal mengunduh template import");
     }
   };
 
@@ -320,6 +366,10 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 flex-wrap">
             <input ref={fileInputRef} type="file" accept=".xlsx,.xlsm" onChange={handleUploadExcel}
               className="hidden" data-testid="input-upload-xlsx" />
+            <Button onClick={handleDownloadImportTemplate} variant="outline"
+              data-testid="btn-download-template" className={T.btnOutline} title="Unduh format file Excel resmi untuk impor massal">
+              <Download className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" /> Template .xlsx
+            </Button>
             <Button onClick={() => fileInputRef.current?.click()} variant="outline"
               data-testid="btn-upload-xlsx" className={T.btnOutline}>
               <Upload className="w-4 h-4 mr-2" /> Upload .xlsx
@@ -328,14 +378,31 @@ export default function Dashboard() {
               className={`rounded-full pill-btn ${tone("indigo", "button")}`}>
               <ClipboardPaste className="w-4 h-4 mr-2" /> Import Massal
             </Button>
-            <Button onClick={exportExcel} variant="outline" data-testid="btn-export"
-              className={T.btnOutline}>
-              <Download className="w-4 h-4 mr-2" /> Export Excel
+            <Button onClick={() => setExportOpen(true)} variant="outline" data-testid="btn-export"
+              className={`${T.btnOutline} relative`}>
+              <Download className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" />
+              Export Data
+              {selectedIds.length > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-600 text-white font-bold">
+                  {selectedIds.length}
+                </span>
+              )}
             </Button>
             {isAdmin && (
-              <Button onClick={runTrainingReminder} variant="outline" data-testid="btn-run-reminder"
-                className={`rounded-full pill-btn ${tone("amber", "button")}`}>
+              <Button
+                onClick={() => setReminderOpen(true)}
+                disabled={selectedIds.length === 0}
+                variant="outline"
+                data-testid="btn-run-reminder"
+                title={selectedIds.length === 0 ? "Centang kandidat terlebih dahulu untuk mengirim reminder" : "Kirim reminder ke kandidat terpilih"}
+                className={`rounded-full pill-btn ${tone("amber", "button")} ${selectedIds.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
                 <Bell className="w-4 h-4 mr-2" /> Kirim Reminder
+                {selectedIds.length > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-600 text-white font-bold">
+                    {selectedIds.length}
+                  </span>
+                )}
               </Button>
             )}
             <Button onClick={() => { setEditing(null); setFormOpen(true); }}
@@ -439,6 +506,9 @@ export default function Dashboard() {
                     onSendEmail={handleSendEmail}
                     sort={sort}
                     onSort={handleSort}
+                    selectedIds={selectedIds}
+                    onToggleSelect={handleToggleSelect}
+                    onToggleSelectAll={handleToggleSelectAll}
                   />
                 )}
                 {!loading && (
@@ -455,6 +525,14 @@ export default function Dashboard() {
       <BulkImportDialog open={bulkOpen} onOpenChange={setBulkOpen} onImport={handleBulkImport} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} candidate={historyCandidate} />
       <EmailTemplateDialog open={emailOpen} onOpenChange={setEmailOpen} candidate={emailCandidate} />
+      <ReminderDialog open={reminderOpen} onOpenChange={setReminderOpen} selectedIds={selectedIds} />
+      <ExportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        onExport={handleExportWithOptions}
+        totalFiltered={pageInfo.total}
+        selectedCount={selectedIds.length}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className={T.dialog}>

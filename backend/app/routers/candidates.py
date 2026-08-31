@@ -164,6 +164,18 @@ async def upload_excel(file: UploadFile = File(...), user: dict = Depends(get_cu
     return await _insert_import(rows, user, "imported", "Import Excel")
 
 
+@router.get("/import-template")
+async def download_import_template(user: dict = Depends(get_current_user)):
+    """Unduh template Excel (.xlsx) untuk impor kandidat massal."""
+    from fastapi.responses import StreamingResponse
+    stream, filename = excel.build_import_template_workbook()
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ---------- Update & delete ----------
 @router.put("/{candidate_id}", response_model=Candidate)
 async def update_candidate(candidate_id: str, payload: CandidateUpdate, bg: BackgroundTasks,
@@ -203,3 +215,69 @@ async def delete_candidate(candidate_id: str, user: dict = Depends(get_current_u
     await history.log(candidate_id, existing.get("nama", ""), "deleted",
                       history.marker("_deleted", "Dihapus", old=existing.get("nama", "")), user)
     return {"ok": True, "berkas_dihapus": berkas_dihapus}
+
+
+VALID_BERKAS_CATEGORIES = ("cv", "ijazah", "skck", "pas_foto", "ktp")
+
+
+@router.post("/{candidate_id}/berkas/{kategori}")
+async def upload_candidate_file(candidate_id: str, kategori: str, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    """Upload / ganti berkas kandidat (CV, KTP, Ijazah, Pas Foto, SKCK)."""
+    kategori = kategori.lower().strip()
+    if kategori not in VALID_BERKAS_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"Kategori berkas tidak valid. Pilih dari: {', '.join(VALID_BERKAS_CATEGORIES)}")
+    
+    existing = await db.candidates.find_one({"id": candidate_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Kandidat tidak ditemukan")
+    scope.assert_can_edit(existing, user)
+
+    # Hapus berkas lama untuk kategori ini jika ada
+    old_file = (existing.get("berkas") or {}).get(kategori)
+    if old_file and isinstance(old_file, dict) and old_file.get("id"):
+        await files_service.hapus_banyak([old_file["id"]])
+
+    # Simpan berkas baru
+    meta = await files_service.simpan(
+        file, kategori=kategori, pemilik_tipe="kandidat", pemilik_id=candidate_id
+    )
+
+    await db.candidates.update_one(
+        {"id": candidate_id},
+        {"$set": {f"berkas.{kategori}": meta, "updated_at": now_iso()}}
+    )
+
+    await history.log(
+        candidate_id, existing.get("nama", ""), "file_uploaded",
+        f"Mengunggah berkas {kategori.upper()} ({file.filename})", user
+    )
+
+    updated = await db.candidates.find_one({"id": candidate_id}, {"_id": 0})
+    return updated
+
+
+@router.delete("/{candidate_id}/berkas/{kategori}")
+async def delete_candidate_file(candidate_id: str, kategori: str, user: dict = Depends(get_current_user)):
+    """Hapus berkas spesifik milik kandidat."""
+    kategori = kategori.lower().strip()
+    existing = await db.candidates.find_one({"id": candidate_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Kandidat tidak ditemukan")
+    scope.assert_can_edit(existing, user)
+
+    old_file = (existing.get("berkas") or {}).get(kategori)
+    if old_file and isinstance(old_file, dict) and old_file.get("id"):
+        await files_service.hapus_banyak([old_file["id"]])
+
+    await db.candidates.update_one(
+        {"id": candidate_id},
+        {"$unset": {f"berkas.{kategori}": ""}, "$set": {"updated_at": now_iso()}}
+    )
+
+    await history.log(
+        candidate_id, existing.get("nama", ""), "file_deleted",
+        f"Menghapus berkas {kategori.upper()}", user
+    )
+
+    updated = await db.candidates.find_one({"id": candidate_id}, {"_id": 0})
+    return updated

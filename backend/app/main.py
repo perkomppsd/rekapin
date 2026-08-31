@@ -103,6 +103,8 @@ async def seed_admin() -> None:
 async def on_startup():
     await db.ensure_indexes()
     await seed_admin()
+    from .services.seed_units import seed_initial_units
+    await seed_initial_units()
 
 
 @app.on_event("shutdown")

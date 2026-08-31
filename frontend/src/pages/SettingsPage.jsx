@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Columns3 } from "lucide-react";
 import AdminPageShell from "@/components/AdminPageShell";
 import ReferenceListManager from "@/components/ReferenceListManager";
+import EmailTemplateManager from "@/components/EmailTemplateManager";
 import { useMeta } from "@/context/MetaContext";
 import { T } from "@/config/theme";
 
@@ -100,6 +101,8 @@ export default function SettingsPage() {
       {referenceLists.map((list) => (
         <ReferenceListManager key={list.key} list={list} />
       ))}
+
+      <EmailTemplateManager />
 
       <div className="pt-2">
         <div className="text-slate-900 dark:text-slate-100 font-medium">Kolom Kustom</div>
