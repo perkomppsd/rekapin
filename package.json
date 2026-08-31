@@ -1,7 +1,10 @@
 {
-  "name": "hr-recruitment-system-root",
+  "name": "rekapin-root",
   "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "build": "cd frontend && npm run build"
+    "build": "npm run build --workspace=frontend"
   }
 }
