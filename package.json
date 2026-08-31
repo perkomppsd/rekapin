@@ -1,10 +1,7 @@
 {
   "name": "rekapin-root",
   "private": true,
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
-    "build": "CI=false npm run build --workspace=frontend"
+    "build": "cd frontend && npm install --legacy-peer-deps && CI=false npx craco build"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "cd frontend && npm install --legacy-peer-deps && CI=false npx craco build",
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
