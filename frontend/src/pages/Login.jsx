@@ -162,7 +162,6 @@ export default function Login() {
             </div>
           ) : null}
 
-          {authConfig.password_aktif && (
           <Button
             type="submit"
             data-testid="login-submit-button"
@@ -176,7 +175,6 @@ export default function Login() {
               </span>
             )}
           </Button>
-          )}
 
           <div className="text-center text-xs text-slate-500">
             Aman & terenkripsi · JWT + bcrypt
