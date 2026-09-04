@@ -18,8 +18,10 @@ load_dotenv(BACKEND_DIR / ".env")
 
 
 # ---------- Wajib (app tidak boleh jalan tanpa ini) ----------
-MONGO_URL = os.environ["MONGO_URL"]
-DB_NAME = os.environ["DB_NAME"]
+MONGO_URL = os.environ.get("MONGO_URL") or os.environ.get("MONGODB_URL")
+if not MONGO_URL:
+    raise KeyError("MONGO_URL atau MONGODB_URL harus diset di environment variable")
+DB_NAME = os.environ.get("DB_NAME", "rekapin")
 
 # ---------- Auth ----------
 JWT_ALGORITHM = "HS256"
