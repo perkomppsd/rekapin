@@ -17,8 +17,35 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BACKEND_DIR / ".env")
 
 
-# ---------- Wajib (app tidak boleh jalan tanpa ini) ----------
-MONGO_URL = os.environ.get("MONGO_URL") or os.environ.get("MONGODB_URL")
+def _resolve_mongo_url() -> str:
+    # 1. Cek variabel umum
+    for key in ("MONGO_URL", "MONGODB_URL", "MONGO_PRIVATE_URL", "DATABASE_URL", "MONGODB_URI"):
+        val = (os.environ.get(key) or "").strip()
+        if val and ("mongodb://" in val or "mongodb+srv://" in val):
+            return val
+        if val and not val.startswith("${{"):
+            return val
+    
+    # 2. Cek jika nama variabel tidak sengaja dinamai ${{...}} atau kuncinya mengandung MONGO
+    for k, v in os.environ.items():
+        v_str = str(v).strip()
+        if ("mongodb://" in v_str or "mongodb+srv://" in v_str) and not v_str.startswith("${{"):
+            return v_str
+            
+    # 3. Rekonstruksi jika ada host & port dari Railway MongoDB
+    host = os.environ.get("MONGOHOST") or os.environ.get("MONGO_HOST")
+    port = os.environ.get("MONGOPORT") or os.environ.get("MONGO_PORT", "27017")
+    user = os.environ.get("MONGOUSER") or os.environ.get("MONGO_USER")
+    pwd = os.environ.get("MONGOPASSWORD") or os.environ.get("MONGO_PASSWORD")
+    if host:
+        if user and pwd:
+            return f"mongodb://{user}:{pwd}@{host}:{port}"
+        return f"mongodb://{host}:{port}"
+        
+    return ""
+
+
+MONGO_URL = _resolve_mongo_url()
 if not MONGO_URL:
     raise KeyError("MONGO_URL atau MONGODB_URL harus diset di environment variable")
 DB_NAME = os.environ.get("DB_NAME", "rekapin")
