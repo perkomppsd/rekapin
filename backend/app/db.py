@@ -10,7 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from . import config
 from .schema import UNIQUE_FIELDS
 
-client = AsyncIOMotorClient(config.MONGO_URL)
+client = AsyncIOMotorClient(config.MONGO_URL, serverSelectionTimeoutMS=5000)
 db = client[config.DB_NAME]
 
 # (nama_koleksi, field, unique)

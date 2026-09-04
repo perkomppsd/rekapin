@@ -60,6 +60,11 @@ async def health_check():
     return {"status": "ok", "app": "HR Recruitment API"}
 
 
+@app.get("/health")
+async def app_level_health():
+    return {"status": "ok", "app": "HR Recruitment API"}
+
+
 app.include_router(api_router)
 app.include_router(cron.public_router)  # /api/cron/... (dipanggil cron platform)
 
@@ -140,10 +145,26 @@ async def seed_admin() -> None:
 
 @app.on_event("startup")
 async def on_startup():
-    await db.ensure_indexes()
-    await seed_admin()
-    from .services.seed_units import seed_initial_units
-    await seed_initial_units()
+    logger.info("Application starting up...")
+    try:
+        await db.ensure_indexes()
+        logger.info("Database indexes ensured.")
+    except Exception as e:
+        logger.error(f"Warning: Failed to ensure indexes: {e}")
+        
+    try:
+        await seed_admin()
+        logger.info("Admin user check completed.")
+    except Exception as e:
+        logger.error(f"Warning: Failed to seed admin user: {e}")
+        
+    try:
+        from .services.seed_units import seed_initial_units
+        await seed_initial_units()
+        logger.info("Initial units check completed.")
+    except Exception as e:
+        logger.error(f"Warning: Failed to seed units: {e}")
+    logger.info("Application startup sequence finished.")
 
 
 @app.on_event("shutdown")
