@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: hr-recruitment-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: rekapin_prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: Admin HR
+      - key: PASSWORD_LOGIN
+        value: "true"
+      - key: CORS_ORIGINS
+        value: "*"

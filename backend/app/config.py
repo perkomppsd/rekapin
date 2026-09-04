@@ -33,7 +33,11 @@ MAX_PAGE_SIZE = 200
 # ---------- Aplikasi ----------
 APP_TITLE = "HR Recruitment Master Data"
 PUBLIC_APP_URL = os.environ.get("PUBLIC_APP_URL", "https://example.com")
-CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
+_cors_raw = os.environ.get("CORS_ORIGINS", "*").strip()
+if _cors_raw == "*" or not _cors_raw:
+    CORS_ORIGINS = ["*"]
+else:
+    CORS_ORIGINS = [orig.strip() for orig in _cors_raw.split(",") if orig.strip()]
 
 # ---------- Email ----------
 # Endpoint provider email (POST JSON). Kosong = pengiriman email DINONAKTIFKAN,

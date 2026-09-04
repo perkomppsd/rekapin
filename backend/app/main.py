@@ -55,6 +55,11 @@ async def root():
     return {"message": "HR Recruitment API"}
 
 
+@api_router.get("/health")
+async def health_check():
+    return {"status": "ok", "app": "HR Recruitment API"}
+
+
 app.include_router(api_router)
 app.include_router(cron.public_router)  # /api/cron/... (dipanggil cron platform)
 
